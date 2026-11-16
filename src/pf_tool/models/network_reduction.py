@@ -51,6 +51,26 @@ class ReducedCase:
                 original_branch.phase_shift_radians = branch.phase
         if solved is original:
             return
+        # The original branches now hold the solved taps/phases, so rebase the
+        # original controls on them (same absolute limits, zero shift).  A
+        # later solve of ``original`` then starts from a consistent state
+        # instead of applying the solved shift a second time.
+        moves = []
+        for control in original.tap_controls:
+            branch = control.branches[0]
+            source = original.branches[branch.original_index]
+            if control.mode == "V":
+                moves.append(source.tap_ratio - branch.base_tap)
+            else:
+                moves.append(source.phase_shift_radians - branch.base_phase)
+        for control, moved in zip(original.tap_controls, moves):
+            for branch in control.branches:
+                source = original.branches[branch.original_index]
+                branch.base_tap = branch.tap = source.tap_ratio
+                branch.base_phase = branch.phase = source.phase_shift_radians
+            control.shift = 0.0
+            control.shift_min = min(control.shift_min - moved, 0.0)
+            control.shift_max = max(control.shift_max - moved, 0.0)
         for reduced_index, representative in enumerate(self.representatives):
             original.buses[representative].bus_type = solved.buses[reduced_index].bus_type
         indices = original.bus_index

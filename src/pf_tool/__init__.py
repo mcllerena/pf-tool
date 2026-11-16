@@ -3,6 +3,7 @@
 from importlib.metadata import PackageNotFoundError, version
 
 from pf_tool.exporter import ExportSolution
+from pf_tool.fast_decoupled import FastDecoupledPowerFlow
 from pf_tool.newton_raphson import BusSolution, NewtonRaphsonPowerFlow, PowerFlowResult
 from pf_tool.optimization import OptimizationPowerFlow
 
@@ -14,6 +15,7 @@ except PackageNotFoundError:
 __all__ = [
     "BusSolution",
     "ExportSolution",
+    "FastDecoupledPowerFlow",
     "NewtonRaphsonPowerFlow",
     "OptimizationPowerFlow",
     "PowerFlowResult",

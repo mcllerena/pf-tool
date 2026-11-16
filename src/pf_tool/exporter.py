@@ -459,6 +459,12 @@ class _SolutionTables:
         method = type(solver).__name__
         if method == "NewtonRaphsonPowerFlow":
             method = "Newton-Raphson"
+        elif method == "FastDecoupledPowerFlow":
+            variant = (
+                "constant B'/B''" if getattr(solver, "enhancement", False) else "Jacobian blocks"
+            )
+            start = "warm start" if getattr(solver, "warm_start", False) else "cold start"
+            method = f"Fast decoupled ({variant}, {start})"
         elif method == "OptimizationPowerFlow":
             start = "warm start" if getattr(solver, "warm_start", False) else "cold start"
             method = f"Optimization (Pyomo/Ipopt, {start})"

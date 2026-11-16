@@ -190,6 +190,8 @@ class NewtonRaphsonPowerFlow:
     filename: Path | None = None
     print_iterations = False
     control_method = "simultaneous"
+    solver_name = "Newton-Raphson power flow"
+    method_label = "Newton-Raphson"
 
     def __init__(
         self,
@@ -296,7 +298,7 @@ class NewtonRaphsonPowerFlow:
             voltage, ybus, iterations, mismatch, reason = self._solve_network(voltage)
             total_iterations += iterations
             if reason is not None or mismatch > self.tolerance:
-                failure_reason = reason or "Newton-Raphson did not converge"
+                failure_reason = reason or f"{self.method_label} did not converge"
                 break
             store_svc_outputs(self.case, self._svc_states)
             q_limits_changed = (
@@ -683,11 +685,16 @@ class NewtonRaphsonPowerFlow:
         step: np.ndarray,
         residual: np.ndarray,
         augmented: tuple[_Augmented, np.ndarray] | None = None,
+        rows: np.ndarray | None = None,
+        monotone: bool = True,
     ) -> tuple[np.ndarray, list[SVCState], csc_matrix]:
         """Damped Newton update.
 
         With ``augmented`` (simultaneous method) the accepted control unknowns
-        are left in ``self._accepted_values``.
+        are left in ``self._accepted_values``.  With ``rows`` (decoupled
+        half-steps) a trial is judged only on those equations.  With
+        ``monotone=False`` the first trial inside the voltage bounds and control
+        step limits is accepted.
         """
         angle_count = len(layout.angle_buses)
         magnitude_count = len(layout.pq)
@@ -703,8 +710,9 @@ class NewtonRaphsonPowerFlow:
             if abs(control_step[offset]) > limit:
                 scale = min(scale, limit / abs(control_step[offset]))
         start_shifts = [control.shift for control in layout.controls]
-        current_max = _max_abs(residual)
-        current_norm = float(np.linalg.norm(residual))
+        judged = residual if rows is None else residual[rows]
+        current_max = _max_abs(judged)
+        current_norm = float(np.linalg.norm(judged))
         angle = np.angle(voltage)
         magnitude = np.abs(voltage)
         for _ in range(16):
@@ -740,8 +748,11 @@ class NewtonRaphsonPowerFlow:
                 trial_residual = self._augmented_residual(
                     trial_ybus, trial_voltage, specified, trial_states, layout, aug, trial_values
                 )
+            if rows is not None:
+                trial_residual = trial_residual[rows]
             if (
-                _max_abs(trial_residual) < current_max
+                not monotone
+                or _max_abs(trial_residual) < current_max
                 or float(np.linalg.norm(trial_residual)) < current_norm
                 or scale <= 1 / 32768
             ):
@@ -792,7 +803,7 @@ class NewtonRaphsonPowerFlow:
                         ybus,
                         total_iterations,
                         mismatch,
-                        reason or "Newton-Raphson did not converge",
+                        reason or f"{self.method_label} did not converge",
                     )
                 shunt_values = values[augmented.shunt_slice]
                 if pass_number == 2 or not np.any(np.abs(shunt_values) > 1e-6):
@@ -1336,7 +1347,7 @@ class NewtonRaphsonPowerFlow:
     def _print_header(self, original_bus_count: int) -> None:
         name = self.filename.name if self.filename is not None else "in-memory case"
         base = self.case.base_mva
-        print(f"Newton-Raphson power flow: {name}")
+        print(f"{self.solver_name}: {name}")
         print(
             f"  Buses: {original_bus_count} ({len(self.case.buses)} after low-impedance reduction)"
         )
@@ -1436,6 +1447,8 @@ class NewtonRaphsonPowerFlow:
         for offset, control in enumerate(controls):
             if self._tap_law(control) is not None:
                 continue  # its complementarity law already handles the limits
+            if step[offset] == 0.0:
+                continue  # a decoupled half-step that does not move this control
             wanted = start_shifts[offset] + step[offset]
             at_bound = (
                 control.shift <= control.shift_min + 1e-9 and wanted < control.shift_min
