@@ -25,9 +25,5 @@ def render_dat(
             " ".join(shlex.quote(str(record.get(column, ""))) for column in columns)
             for record in records
         ]
-        sections.append(
-            f"param: {name}: {' '.join(columns)} :=\n"
-            + "\n".join(rows)
-            + "\n;"
-        )
+        sections.append(f"param: {name}: {' '.join(columns)} :=\n" + "\n".join(rows) + "\n;")
     return "\n\n".join(sections) + "\n"
