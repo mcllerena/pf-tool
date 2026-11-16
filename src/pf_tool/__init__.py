@@ -9,7 +9,7 @@ from pf_tool.optimization import OptimizationPowerFlow
 try:
     __version__ = version("pf-tool")
 except PackageNotFoundError:
-    __version__ = "0.2.2"
+    __version__ = "0.3.0"
 
 __all__ = [
     "BusSolution",

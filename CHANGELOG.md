@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.3.0](https://github.com/mcllerena/pf-tool/compare/pf-tool-v0.2.2...pf-tool-v0.3.0) (2026-11-16)
+
+
+### Features
+
+* add new parameters for showing iterations printing ([f177edf](https://github.com/mcllerena/pf-tool/commit/f177edf6f00f9b1f5a36275e8cee73367f0d1253))
+* update control mode handling when running newton-raphson for faster solving ([324a32f](https://github.com/mcllerena/pf-tool/commit/324a32ff5175309d3565b2c21c4481755899a110))
+
+
+### Bug Fixes
+
+* re-format necessary files ([3da9ec9](https://github.com/mcllerena/pf-tool/commit/3da9ec908681f7b078540a2de522b6e585e52e25))
+
 ## [0.2.2](https://github.com/mcllerena/pf-tool/compare/pf-tool-v0.2.1...pf-tool-v0.2.2) (2026-11-16)
 
 
