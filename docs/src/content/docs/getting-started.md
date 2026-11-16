@@ -51,17 +51,17 @@ ExportSolution(solver, output_path="results/CASO01-FLOW-nr.xlsx")
 
 ## Solver options
 
-| Class                    | Argument             | Default                   | Meaning                                                   |
-| ------------------------ | -------------------- | ------------------------- | --------------------------------------------------------- |
-| both                     | `data_file`          | `tests/data/CASO01-FLOW.dat`    | Case to solve                                             |
-| both                     | `tolerance`          | `TEPA / BASE` from `DCTE` | Maximum absolute P, Q, and control mismatch, in pu        |
-| `NewtonRaphsonPowerFlow` | `max_iterations`     | `ACIT` from `DCTE`        | Newton iterations per inner solve                         |
-| `NewtonRaphsonPowerFlow` | `max_control_passes` | 50                        | Outer passes for discrete controls                        |
-| `OptimizationPowerFlow`  | `max_iterations`     | `max(200, 2·ACIT)`        | Ipopt iterations per NLP solve                            |
-| `OptimizationPowerFlow`  | `max_cpu_time`       | 900 s                     | Ipopt CPU-time limit per NLP solve                        |
-| `OptimizationPowerFlow`  | `max_control_passes` | 20                        | NLP re-solves for SVC regions and discrete controls       |
-| `OptimizationPowerFlow`  | `warm_start`         | `True`                    | Use a Newton solve as the initial point and control state |
-| `OptimizationPowerFlow`  | `print_iterations`   | `False`                   | Print the Ipopt iteration table                           |
+| Class                    | Argument             | Default                      | Meaning                                                   |
+| ------------------------ | -------------------- | ---------------------------- | --------------------------------------------------------- |
+| both                     | `data_file`          | `tests/data/CASO01-FLOW.dat` | Case to solve                                             |
+| both                     | `tolerance`          | `TEPA / BASE` from `DCTE`    | Maximum absolute P, Q, and control mismatch, in pu        |
+| `NewtonRaphsonPowerFlow` | `max_iterations`     | `ACIT` from `DCTE`           | Newton iterations per inner solve                         |
+| `NewtonRaphsonPowerFlow` | `max_control_passes` | 50                           | Outer passes for discrete controls                        |
+| `OptimizationPowerFlow`  | `max_iterations`     | `max(200, 2·ACIT)`           | Ipopt iterations per NLP solve                            |
+| `OptimizationPowerFlow`  | `max_cpu_time`       | 900 s                        | Ipopt CPU-time limit per NLP solve                        |
+| `OptimizationPowerFlow`  | `max_control_passes` | 20                           | NLP re-solves for SVC regions and discrete controls       |
+| `OptimizationPowerFlow`  | `warm_start`         | `True`                       | Use a Newton solve as the initial point and control state |
+| `OptimizationPowerFlow`  | `print_iterations`   | `False`                      | Print the Ipopt iteration table                           |
 
 ## Result object
 

@@ -7,6 +7,7 @@ AC/DC power-flow solver for the Brazilian Interconnected Power System (BIPS).
 ## 📖 Documentation
 
 The complete documentation is available at:
+
 - **Live Site:** https://mcllerena.github.io/pf-tool/
 - **Source:** [`src/content/docs/`](src/content/docs/)
 
@@ -44,4 +45,3 @@ Documentation is organized in `src/content/docs/`:
 - **Exporting** - Excel workbook export functionality
 
 See the [main README](../README.md) for package information.
-
