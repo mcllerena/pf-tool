@@ -480,7 +480,7 @@ class _SolutionTables:
             if self.magnitude[i] < bus.voltage_min_pu - 1e-6
         )
         return [
-            ("Case", str(getattr(solver, "data_file", ""))),
+            ("Case", str(getattr(solver, "filename", None) or "")),
             ("Workbook", str(output_path)),
             ("Method", method),
             ("Converged", bool(self.result.converged)),

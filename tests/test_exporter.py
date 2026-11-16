@@ -33,7 +33,7 @@ class ExportSolutionTests(unittest.TestCase):
         solver.case = case
         solver.tolerance = 1e-9
         solver.max_iterations = 20
-        solver.data_file = Path("synthetic.dat")
+        solver.filename = Path("synthetic.dat")
         self.assertTrue(solver.solve().converged)
 
         with tempfile.TemporaryDirectory() as folder:

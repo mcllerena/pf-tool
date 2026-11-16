@@ -601,7 +601,7 @@ class OptimizationPowerFlow:
 
     def __init__(
         self,
-        data_file: str | Path,
+        filename: str | Path,
         *,
         tolerance: float | None = None,
         max_iterations: int | None = None,
@@ -611,8 +611,8 @@ class OptimizationPowerFlow:
         print_iterations: bool = False,
         ipopt_executable: str | Path | None = None,
     ) -> None:
-        self.data_file = Path(data_file)
-        tables = parse_dat_file(self.data_file)
+        self.filename = Path(filename)
+        tables = parse_dat_file(self.filename)
         self.case = build_power_flow_case(tables)
         constants = {
             row.get("Mn", "").upper(): float(row.get("Val", 0.0)) for row in tables.get("DCTE", [])

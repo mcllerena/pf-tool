@@ -53,7 +53,36 @@ class NewtonRaphsonTests(unittest.TestCase):
         self.assertLess(abs(result.voltage[1]), 1.0)
         self.assertTrue(np.isfinite(result.voltage).all())
 
-    def test_svc_power_and_current_modes_balance_initial_reactive_injection(self) -> None:
+    def test_print_iterations_prints_one_row_per_iteration_and_a_summary(self) -> None:
+        import contextlib
+        import io
+
+        case = PowerFlowCase(
+            base_mva=100.0,
+            buses=[
+                Bus(1, "SLACK", BusType.SLACK, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+                Bus(2, "LOAD", BusType.PQ, 1.0, 0.0, 0.0, 0.0, 50.0, 20.0, 0.0),
+            ],
+            branches=[Branch(1, 2, 1, 0.0, 0.1, 0.0)],
+        )
+        solver = object.__new__(NewtonRaphsonPowerFlow)
+        solver.case = case
+        solver.tolerance = 1e-9
+        solver.max_iterations = 20
+        solver.print_iterations = True
+        output = io.StringIO()
+        with contextlib.redirect_stdout(output):
+            result = solver.solve()
+
+        lines = output.getvalue().splitlines()
+        header = next(i for i, line in enumerate(lines) if line.lstrip().startswith("Pass"))
+        rows = [line.split() for line in lines[header + 2 :] if line[:4].strip().isdigit()]
+        self.assertEqual([int(row[1]) for row in rows], list(range(result.iterations + 1)))
+        self.assertEqual(rows[0][-1], "-")
+        # The only PQ bus carries the initial Q mismatch.
+        self.assertEqual(rows[0][6], "2")
+        self.assertGreater(abs(float(rows[0][5])), 1.0)
+        self.assertTrue(lines[-1].startswith(f"Converged in {result.iterations} iterations"))
         for mode in ("P", "I"):
             with self.subTest(mode=mode):
                 case = PowerFlowCase(

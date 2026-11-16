@@ -36,6 +36,24 @@ _BOUND_HITS_TO_LIMIT = 3
 _CONFLICT_TAP_STEP = 0.2
 _CONFLICT_PHASE_STEP = 1.0
 
+# Columns of the ``print_iterations`` table.
+_COLUMNS = (
+    ("Pass", 4),
+    ("Iter", 4),
+    ("Mismatch (pu)", 13),
+    ("Max dP (MW)", 12),
+    ("P bus", 6),
+    ("Max dQ (Mvar)", 13),
+    ("Q bus", 6),
+    ("Ctrl (pu)", 10),
+    ("Max dV (pu)", 11),
+    ("Max dAng (deg)", 14),
+    ("Step", 6),
+)
+_WIDTHS = tuple(width for _, width in _COLUMNS)
+_ITERATION_HEADER = "  ".join(title.rjust(width) for title, width in _COLUMNS)
+_ITERATION_RULE = "-" * len(_ITERATION_HEADER)
+
 
 @dataclass(slots=True)
 class BusSolution:
@@ -76,8 +94,11 @@ class _Layout:
 class NewtonRaphsonPowerFlow:
     """Solve an ANAREDE ``.dat`` case using sparse Newton-Raphson iterations.
 
-    ``data_file`` is an AMPL-style ANAREDE block export, such as the cases in
-    the repository's ``tests/data/`` folder.
+    ``filename`` is an AMPL-style ANAREDE block export, such as the cases in
+    the repository's ``tests/data/`` folder.  With ``print_iterations=True``
+    the solve prints one table row per Newton iteration (mismatches, voltage
+    and angle changes, and line-search step length) plus the outer control
+    updates between passes.
 
     Besides bus voltages, the Newton state includes SVC reactive outputs, LTC
     tap shifts (DOPC ``CTAP``) and phase-shifter angles (DOPC ``CPHS``).
@@ -87,17 +108,23 @@ class NewtonRaphsonPowerFlow:
 
     max_control_passes = 50
     tap_voltage_band = 0.01
+    # Class-level defaults keep solvers created with ``object.__new__`` (tests,
+    # the optimization warm start) silent.
+    filename: Path | None = None
+    print_iterations = False
 
     def __init__(
         self,
-        data_file: str | Path,
+        filename: str | Path,
         *,
         tolerance: float | None = None,
         max_iterations: int | None = None,
         max_control_passes: int = 50,
+        print_iterations: bool = False,
     ) -> None:
-        self.data_file = Path(data_file)
-        tables = parse_dat_file(self.data_file)
+        self.filename = Path(filename)
+        self.print_iterations = bool(print_iterations)
+        tables = parse_dat_file(self.filename)
         self.case = build_power_flow_case(tables)
         constants = {
             record.get("Mn", "").upper(): float(record.get("Val", 0.0))
@@ -125,6 +152,9 @@ class NewtonRaphsonPowerFlow:
         original_case = self.case
         reduction = reduce_low_impedance_branches(original_case)
         self.case = reduction.case
+        self._pass_number = 0
+        if self.print_iterations:
+            self._print_header(len(original_case.buses))
         try:
             voltage, _, total_iterations, mismatch, failure_reason = self._solve_reduced_case()
         finally:
@@ -155,6 +185,8 @@ class NewtonRaphsonPowerFlow:
             buses=buses,
             failure_reason=failure_reason,
         )
+        if self.print_iterations:
+            self._print_summary(self.result)
         return self.result
 
     def _solve_reduced_case(
@@ -175,7 +207,8 @@ class NewtonRaphsonPowerFlow:
 
         # Discrete controls (generator Q limits, voltage-limited buses, shunt
         # banks, LCC set-points) change the equations; re-solve after each pass.
-        for _ in range(self.max_control_passes):
+        for pass_number in range(1, self.max_control_passes + 1):
+            self._pass_number = pass_number
             voltage, ybus, iterations, mismatch, reason = self._solve_network(voltage)
             total_iterations += iterations
             if reason is not None or mismatch > self.tolerance:
@@ -205,6 +238,17 @@ class NewtonRaphsonPowerFlow:
             )
             if shunts_changed:
                 ybus = build_ybus(self.case)
+            if self.print_iterations:
+                self._print_control_update(
+                    pass_number,
+                    {
+                        "generator Q limits": q_limits_changed,
+                        "voltage limits": voltage_limits_changed,
+                        "switched shunts": shunts_changed,
+                        "LCC set-points": lcc_changed,
+                        "LTC regulation": taps_changed,
+                    },
+                )
             if (
                 not q_limits_changed
                 and not voltage_limits_changed
@@ -287,6 +331,8 @@ class NewtonRaphsonPowerFlow:
         self._indices = self.case.bus_index
         ybus = build_ybus(self.case)
         mismatch = float("inf")
+        # Voltage change and step length of the update that led to the current row.
+        last_step: tuple[float, float, float] | None = None
 
         for iteration in range(self.max_iterations + 1):
             layout = self._layout(svc_states, controls)
@@ -294,6 +340,8 @@ class NewtonRaphsonPowerFlow:
             self._svc_states = svc_states
             residual = self._residual(ybus, voltage, specified, svc_states, layout)
             mismatch = _max_abs(residual)
+            if self.print_iterations:
+                self._print_iteration(iteration, residual, layout, last_step)
             if mismatch <= self.tolerance or iteration == self.max_iterations:
                 return voltage, ybus, iteration, mismatch, None
 
@@ -324,9 +372,16 @@ class NewtonRaphsonPowerFlow:
                     "Sparse Newton solve returned a non-finite step",
                 )
 
+            previous_voltage = voltage
             voltage, svc_states, ybus = self._line_search(
                 ybus, voltage, specified, svc_states, layout, step, residual
             )
+            if self.print_iterations:
+                last_step = (
+                    _max_abs(np.abs(voltage) - np.abs(previous_voltage)),
+                    float(np.rad2deg(_max_abs(np.angle(voltage * np.conj(previous_voltage))))),
+                    self._step_scale,
+                )
             magnitude = np.abs(voltage)
             if np.any(magnitude < 0.4) or np.any(magnitude > 2.0):
                 return (
@@ -571,11 +626,109 @@ class NewtonRaphsonPowerFlow:
                 or scale <= 1 / 32768
             ):
                 self._track_control_limits(layout.controls, start_shifts, control_step)
+                self._step_scale = scale
                 return trial_voltage, trial_states, trial_ybus
             scale *= 0.5
         for offset, control in enumerate(layout.controls):
             control.apply(start_shifts[offset])
+        self._step_scale = 0.0
         return voltage, svc_states, ybus
+
+    def _print_header(self, original_bus_count: int) -> None:
+        name = self.filename.name if self.filename is not None else "in-memory case"
+        base = self.case.base_mva
+        print(f"Newton-Raphson power flow: {name}")
+        print(
+            f"  Buses: {original_bus_count} ({len(self.case.buses)} after low-impedance reduction)"
+        )
+        print(
+            f"  Tolerance: {self.tolerance:.3e} pu ({self.tolerance * base:.4g} MW/Mvar), "
+            f"up to {self.max_iterations} iterations per control pass"
+        )
+        print(
+            "  Mismatch: largest P, Q, SVC, or tap-control residual; converged when "
+            "it is below the tolerance."
+        )
+        print(
+            "  Max dV / Max dAng: largest voltage-magnitude / angle change of the step "
+            "that produced the row. Step: line-search length (1 = full Newton step)."
+        )
+        print()
+        print(_ITERATION_HEADER)
+        print(_ITERATION_RULE, flush=True)
+
+    def _print_iteration(
+        self,
+        iteration: int,
+        residual: np.ndarray,
+        layout: _Layout,
+        last_step: tuple[float, float, float] | None,
+    ) -> None:
+        angle_count = len(layout.angle_buses)
+        pq_count = len(layout.pq)
+        base = self.case.base_mva
+        p_value, p_bus = self._largest(residual[:angle_count], layout.angle_buses)
+        q_value, q_bus = self._largest(residual[angle_count : angle_count + pq_count], layout.pq)
+        controls = residual[angle_count + pq_count :]
+        # Round before formatting so tiny negatives print as 0.000, not -0.000.
+        p_mw = round(p_value * base, 3) + 0.0
+        q_mvar = round(q_value * base, 3) + 0.0
+        cells = [
+            f"{self._pass_number:>{_WIDTHS[0]}d}",
+            f"{iteration:>{_WIDTHS[1]}d}",
+            f"{_max_abs(residual):>{_WIDTHS[2]}.3e}",
+            f"{p_mw:>{_WIDTHS[3]}.3f}",
+            f"{p_bus:>{_WIDTHS[4]}}",
+            f"{q_mvar:>{_WIDTHS[5]}.3f}",
+            f"{q_bus:>{_WIDTHS[6]}}",
+            f"{_max_abs(controls):>{_WIDTHS[7]}.3e}" if controls.size else "-".rjust(_WIDTHS[7]),
+        ]
+        if last_step is None:
+            cells += ["-".rjust(width) for width in _WIDTHS[8:]]
+        else:
+            delta_v, delta_angle, scale = last_step
+            cells += [
+                f"{delta_v:>{_WIDTHS[8]}.5f}",
+                f"{delta_angle:>{_WIDTHS[9]}.4f}",
+                f"{scale:>{_WIDTHS[10]}.4f}",
+            ]
+        print("  ".join(cells), flush=True)
+
+    def _largest(self, values: np.ndarray, buses: np.ndarray) -> tuple[float, str]:
+        """Signed largest-magnitude entry and the number of its bus."""
+        if values.size == 0:
+            return 0.0, "-"
+        position = int(np.argmax(np.abs(values)))
+        return float(values[position]), str(self.case.buses[int(buses[position])].number)
+
+    @staticmethod
+    def _print_control_update(pass_number: int, changes: dict[str, bool]) -> None:
+        changed = [name for name, flag in changes.items() if flag]
+        if changed:
+            print(
+                f"  -- pass {pass_number} converged; updating {', '.join(changed)} and re-solving",
+                flush=True,
+            )
+        else:
+            print(f"  -- pass {pass_number} converged; controls are stable", flush=True)
+
+    def _print_summary(self, result: PowerFlowResult) -> None:
+        print(_ITERATION_RULE)
+        base = self.case.base_mva
+        passes = f"{self._pass_number} control pass{'es' if self._pass_number != 1 else ''}"
+        if result.converged:
+            print(
+                f"Converged in {result.iterations} iterations over {passes}; "
+                f"max mismatch {result.max_mismatch:.3e} pu "
+                f"({result.max_mismatch * base:.3e} MW/Mvar)",
+                flush=True,
+            )
+        else:
+            print(
+                f"Did not converge after {result.iterations} iterations over {passes}: "
+                f"{result.failure_reason}; max mismatch {result.max_mismatch:.3e} pu",
+                flush=True,
+            )
 
     @staticmethod
     def _track_control_limits(

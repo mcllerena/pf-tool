@@ -48,7 +48,10 @@ Check it with `ipopt --version`. Or skip `PATH` and pass the executable directly
 
 ```python
 nlp = OptimizationPowerFlow(
-    "CASO01-FLOW.dat", ipopt_executable="path/to/solver", warm_start=True, print_iterations=True
+    filename="tests/data/CASO01-FLOW.dat",
+    ipopt_executable="path/to/solver",
+    warm_start=True,
+    print_iterations=True,
 ).solve()
 ```
 
@@ -57,11 +60,10 @@ nlp = OptimizationPowerFlow(
 ### Solve a case
 
 ```python
-from pf_tool import ExportSolution, NewtonRaphsonPowerFlow, OptimizationPowerFlow
+from pf_tool import ExportSolution, NewtonRaphsonPowerFlow
 
-solver = NewtonRaphsonPowerFlow("CASO01-FLOW.dat")
+solver = NewtonRaphsonPowerFlow(filename="tests/data/CASO01-FLOW.dat", print_iterations=True)
 result = solver.solve()
-print(result.converged, result.iterations, result.max_mismatch)
 
 ExportSolution(solver, output_path="results/CASO01-FLOW-nr.xlsx")
 ```

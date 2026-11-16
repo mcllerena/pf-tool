@@ -21,9 +21,34 @@ Each solver class takes the path to a `.dat` file. Its `.solve()` method returns
 ```python
 from pf_tool import NewtonRaphsonPowerFlow
 
-result = NewtonRaphsonPowerFlow("tests/data/CASO01-FLOW.dat").solve()
+result = NewtonRaphsonPowerFlow(
+    filename="tests/data/CASO01-FLOW.dat",
+    print_iterations=True,  # print the iteration table shown below
+).solve()
 print(result.converged, result.iterations, result.max_mismatch)
 ```
+
+With `print_iterations=True`, the Newton-Raphson solver prints one row per iteration, then a line between control passes naming the controls that changed, and a final summary:
+
+```text
+Pass  Iter  Mismatch (pu)   Max dP (MW)   P bus  Max dQ (Mvar)   Q bus   Ctrl (pu)  Max dV (pu)  Max dAng (deg)    Step
+-----------------------------------------------------------------------------------------------------------------------
+   1     0      1.359e+01         0.214    4471       1358.953    5480   2.173e-02            -               -       -
+   1     1      9.646e-01         3.980    7552        -96.464    7039   3.762e-05      0.09246          2.3670  1.0000
+   ...
+  -- pass 1 converged; updating generator Q limits, LCC set-points, LTC regulation and re-solving
+   ...
+Converged in 19 iterations over 6 control passes; max mismatch 2.582e-07 pu (2.582e-05 MW/Mvar)
+```
+
+| Column                | Meaning                                                                                     |
+| --------------------- | ------------------------------------------------------------------------------------------- |
+| `Pass` / `Iter`       | Outer control pass, and Newton iteration within it                                          |
+| `Mismatch (pu)`       | Largest P, Q, SVC, or tap-control residual; the pass converges when it is below `tolerance` |
+| `Max dP` / `Max dQ`   | Largest active / reactive power mismatch and the bus where it occurs                        |
+| `Ctrl (pu)`           | Largest SVC or tap-control equation residual                                                |
+| `Max dV` / `Max dAng` | Largest voltage-magnitude / angle change made by the step that produced the row             |
+| `Step`                | Line-search step length; 1 is a full Newton step, smaller values mean the step was damped   |
 
 ```python
 from pf_tool import OptimizationPowerFlow
@@ -53,10 +78,11 @@ ExportSolution(solver, output_path="results/CASO01-FLOW-nr.xlsx")
 
 | Class                    | Argument             | Default                   | Meaning                                                   |
 | ------------------------ | -------------------- | ------------------------- | --------------------------------------------------------- |
-| both                     | `data_file`          | required                  | Case to solve                                             |
+| both                     | `filename`           | required                  | Case to solve                                             |
 | both                     | `tolerance`          | `TEPA / BASE` from `DCTE` | Maximum absolute P, Q, and control mismatch, in pu        |
 | `NewtonRaphsonPowerFlow` | `max_iterations`     | `ACIT` from `DCTE`        | Newton iterations per inner solve                         |
 | `NewtonRaphsonPowerFlow` | `max_control_passes` | 50                        | Outer passes for discrete controls                        |
+| `NewtonRaphsonPowerFlow` | `print_iterations`   | `False`                   | Print the per-iteration table shown above                 |
 | `OptimizationPowerFlow`  | `max_iterations`     | `max(200, 2·ACIT)`        | Ipopt iterations per NLP solve                            |
 | `OptimizationPowerFlow`  | `max_cpu_time`       | 900 s                     | Ipopt CPU-time limit per NLP solve                        |
 | `OptimizationPowerFlow`  | `max_control_passes` | 20                        | NLP re-solves for SVC regions and discrete controls       |
