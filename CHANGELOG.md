@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.2.1](https://github.com/mcllerena/pf-tool/compare/pf-tool-v0.2.0...pf-tool-v0.2.1) (2026-11-16)
+
+
+### Bug Fixes
+
+* address formatter issues on files ([3c2481b](https://github.com/mcllerena/pf-tool/commit/3c2481b21083c7fc45c9d33fd9ff2f0f78b67591))
+* configure PyPI trusted publishing ([2d64105](https://github.com/mcllerena/pf-tool/commit/2d64105bba44cd7334eb122a722d53c149771bdc))
+* render docs correctly on GitHub Pages ([70d3b99](https://github.com/mcllerena/pf-tool/commit/70d3b99d1eaae76ddf6ec2e317539c2475db634e))
+
+
+### Documentation
+
+* simplify README ([a545dc6](https://github.com/mcllerena/pf-tool/commit/a545dc6bcfcabc1db8cd0235082de3474ace1a8c))
+
 ## [0.2.0](https://github.com/mcllerena/pf-tool/compare/pf-tool-v0.1.0...pf-tool-v0.2.0) (2026-11-16)
 
 ### Features
