@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.4.0](https://github.com/mcllerena/pf-tool/compare/pf-tool-v0.3.0...pf-tool-v0.4.0) (2026-11-16)
+
+
+### Features
+
+* add new parser capability for bips pwf and ntw files to .dat readable ([3f581c3](https://github.com/mcllerena/pf-tool/commit/3f581c348ca0447e6fec2c58de6ca9d970800021))
+* implement fast decoupled power flow method ([0e12b67](https://github.com/mcllerena/pf-tool/commit/0e12b67a10aad49244c84c08447780b75ee695cf))
+
+
+### Bug Fixes
+
+* resolve prek issues across new files ([1a20bee](https://github.com/mcllerena/pf-tool/commit/1a20beeec198b854e05e8a4c958bb36e56ab8ded))
+
+
+### Documentation
+
+* create docs for new method implementation ([f151a05](https://github.com/mcllerena/pf-tool/commit/f151a058efc10d93d5ec21f397ada4bb7806f20f))
+
 ## [0.3.0](https://github.com/mcllerena/pf-tool/compare/pf-tool-v0.2.2...pf-tool-v0.3.0) (2026-11-16)
 
 
