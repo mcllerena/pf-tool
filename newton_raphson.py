@@ -76,9 +76,9 @@ class _Layout:
 class NewtonRaphsonPowerFlow:
     """Solve an ANAREDE ``.dat`` case using sparse Newton-Raphson iterations.
 
-    The input is the AMPL-style block export used by ``data/*.dat``.  The
+    The input is the AMPL-style block export used by ``tests/data/*.dat``.  The
     constructor accepts an alternate case path for other exports in the same
-    format; by default it solves ``data/CASO01-FLOW.dat``.
+    format; by default it solves ``tests/data/CASO01-FLOW.dat``.
 
     Besides bus voltages, the Newton state includes SVC reactive outputs, LTC
     tap shifts (DOPC ``CTAP``) and phase-shifter angles (DOPC ``CPHS``).

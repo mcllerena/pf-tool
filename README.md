@@ -1,7 +1,11 @@
 # pf-tool
 
+AC/DC power-flow solver for the Brazilian Interconnected Power System (BIPS): ANAREDE `.dat` data model, Newton-Raphson and optimization methods.
+
+[![Docs](https://img.shields.io/badge/docs-guides-0079c2?style=flat-square)](docs/) [![Python 3.12+](https://img.shields.io/badge/Python-3.12+-3776ab?logo=python&logoColor=white)](pyproject.toml) [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff) [![BSD 3-Clause](https://img.shields.io/badge/license-BSD--3--Clause-blue.svg)](LICENSE.txt)
+
 **pf-tool** is an AC/DC power-flow package for the Brazilian Interconnected
-Power System (BIPS). It solves the ANAREDE-style `.dat` cases in `data/`, which
+Power System (BIPS). It solves the ANAREDE-style `.dat` cases in `tests/data/`, which
 are BIPS snapshots of about 12,600 buses each, with two AC power-flow methods:
 
 - [`newton_raphson.py`](newton_raphson.py): `NewtonRaphsonPowerFlow`, a sparse
@@ -17,8 +21,8 @@ assembly live in [`utils/`](utils/).
 from newton_raphson import NewtonRaphsonPowerFlow
 from optimization import OptimizationPowerFlow
 
-newton = NewtonRaphsonPowerFlow("data/CASO01-FLOW.dat").solve()
-nlp = OptimizationPowerFlow("data/CASO01-FLOW.dat", warm_start=True).solve()
+newton = NewtonRaphsonPowerFlow("tests/data/CASO01-FLOW.dat").solve()
+nlp = OptimizationPowerFlow("tests/data/CASO01-FLOW.dat", warm_start=True).solve()
 ```
 
 The optimization solver requires `pyomo` (see `requirements.txt`) and an Ipopt
@@ -26,8 +30,7 @@ executable on `PATH`.
 
 ### Documentation
 
-[`docs/`](docs/) is an [Astro Starlight](https://starlight.astro.build/) site.
-It documents:
+Comprehensive [documentation](docs/) built with [Astro Starlight](https://starlight.astro.build/) documents:
 
 - every data block and column;
 - how each power-system component is modeled;
@@ -64,7 +67,7 @@ Shunts.
 ```python
 from exporter import ExportSolution
 
-solver = NewtonRaphsonPowerFlow("data/CASO01-FLOW.dat")
+solver = NewtonRaphsonPowerFlow("tests/data/CASO01-FLOW.dat")
 solver.solve()
 ExportSolution(solver, output_path="results/CASO01-FLOW-nr.xlsx")
 ```

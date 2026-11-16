@@ -2,7 +2,7 @@
 
 Usage::
 
-    solver = NewtonRaphsonPowerFlow("data/CASO01-FLOW.dat")
+    solver = NewtonRaphsonPowerFlow("tests/data/CASO01-FLOW.dat")
     solver.solve()
     ExportSolution(solver, output_path="results/CASO01.xlsx")
 

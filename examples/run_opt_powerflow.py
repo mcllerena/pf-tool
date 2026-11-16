@@ -6,7 +6,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from exporter import ExportSolution
 from optimization import OptimizationPowerFlow
 
-data_file = Path(__file__).resolve().parents[1] / "data" / "CASO01-FLOW.dat"
+data_file = Path(__file__).resolve().parents[1] / "tests" / "data" / "CASO01-FLOW.dat"
 output_file = Path(__file__).resolve().parent / "results" / "CASO01-FLOW-opt.xlsx"
 warm_start = True  # False starts the NLP from the voltages stored in the case
 print_iterations = True  # print the Ipopt iteration log of each NLP solve

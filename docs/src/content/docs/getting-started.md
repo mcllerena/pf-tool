@@ -21,7 +21,7 @@ Each solver class takes the path to a `.dat` file. Its `.solve()` method returns
 ```python
 from newton_raphson import NewtonRaphsonPowerFlow
 
-result = NewtonRaphsonPowerFlow("data/CASO01-FLOW.dat").solve()
+result = NewtonRaphsonPowerFlow("tests/data/CASO01-FLOW.dat").solve()
 print(result.converged, result.iterations, result.max_mismatch)
 ```
 
@@ -29,7 +29,7 @@ print(result.converged, result.iterations, result.max_mismatch)
 from optimization import OptimizationPowerFlow
 
 result = OptimizationPowerFlow(
-    "data/CASO01-FLOW.dat",
+    "tests/data/CASO01-FLOW.dat",
     warm_start=True,        # start from a Newton-Raphson solution
     print_iterations=False, # True prints the Ipopt log for each NLP solve
 ).solve()
@@ -44,7 +44,7 @@ Pass the solved solver to `ExportSolution` to write every component result to an
 ```python
 from exporter import ExportSolution
 
-solver = NewtonRaphsonPowerFlow("data/CASO01-FLOW.dat")
+solver = NewtonRaphsonPowerFlow("tests/data/CASO01-FLOW.dat")
 solver.solve()
 ExportSolution(solver, output_path="results/CASO01-FLOW-nr.xlsx")
 ```
@@ -53,7 +53,7 @@ ExportSolution(solver, output_path="results/CASO01-FLOW-nr.xlsx")
 
 | Class                    | Argument             | Default                   | Meaning                                                   |
 | ------------------------ | -------------------- | ------------------------- | --------------------------------------------------------- |
-| both                     | `data_file`          | `data/CASO01-FLOW.dat`    | Case to solve                                             |
+| both                     | `data_file`          | `tests/data/CASO01-FLOW.dat`    | Case to solve                                             |
 | both                     | `tolerance`          | `TEPA / BASE` from `DCTE` | Maximum absolute P, Q, and control mismatch, in pu        |
 | `NewtonRaphsonPowerFlow` | `max_iterations`     | `ACIT` from `DCTE`        | Newton iterations per inner solve                         |
 | `NewtonRaphsonPowerFlow` | `max_control_passes` | 50                        | Outer passes for discrete controls                        |
