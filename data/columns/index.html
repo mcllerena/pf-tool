@@ -1,0 +1,667 @@
+<!DOCTYPE html><html lang="en" dir="ltr" data-theme="dark" data-has-toc data-has-sidebar data-astro-cid-g5ptsecz><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>Block columns | BIPS AC/DC Power Flow</title><link rel="shortcut icon" href="/favicon.svg" type="image/svg+xml"/><meta name="generator" content="Astro v7.4.12"/><meta name="generator" content="Starlight v0.43.1"/><meta property="og:title" content="Block columns"/><meta property="og:type" content="article"/><meta property="og:locale" content="en"/><meta property="og:description" content="Column-by-column meaning of the data blocks read by the solvers."/><meta property="og:site_name" content="BIPS AC/DC Power Flow"/><meta name="twitter:card" content="summary_large_image"/><meta name="description" content="Column-by-column meaning of the data blocks read by the solvers."/><script>
+	(() => {
+		const storedTheme =
+			typeof localStorage !== 'undefined' && localStorage.getItem('starlight-theme');
+		const theme =
+			storedTheme ||
+			(window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+		document.documentElement.dataset.theme = theme === 'light' ? 'light' : 'dark';
+	})();
+</script><link rel="stylesheet" href="/_astro/print.C9eyqPGL.css" media="print"><link rel="stylesheet" href="/_astro/common.DyHkn6-L.css"><style>@layer starlight.components.icon{svg[data-astro-cid-hkc32dio]{color:var(--sl-icon-color);font-size:var(--sl-icon-size,1em);width:1em;height:1em;overflow:visible}}
+</style><script type="module" src="/_astro/page.cNngjUgL.js"></script></head><body data-astro-cid-g5ptsecz><a class="sl-skip-link" href="#_top" data-astro-cid-qb7clj6f>Skip to content</a><div class="page sl-flex" data-astro-cid-yntsjkba><header class="header" data-astro-cid-yntsjkba><div class="header" data-astro-cid-by6fddyj><div class="title-wrapper sl-flex" data-astro-cid-by6fddyj><a href="/" class="site-title sl-flex" data-astro-cid-6rvad3va><span translate="no" data-astro-cid-6rvad3va>BIPS AC/DC Power Flow</span></a></div><div class="sl-flex print:hidden" data-astro-cid-by6fddyj><site-search data-translations="{&quot;placeholder&quot;:&quot;Search&quot;}" data-astro-cid-b5kgnn7o="true"><button data-open-modal disabled aria-label="Search" aria-keyshortcuts="Control+K" data-astro-cid-b5kgnn7o><svg data-astro-cid-b5kgnn7o="true" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;" data-astro-cid-hkc32dio><path d="M21.71 20.29 18 16.61A9 9 0 1 0 16.61 18l3.68 3.68a.999.999 0 0 0 1.42 0 1 1 0 0 0 0-1.39ZM11 18a7 7 0 1 1 0-14 7 7 0 0 1 0 14Z"/></svg><span class="sl-hidden md:sl-block" aria-hidden="true" data-astro-cid-b5kgnn7o>Search</span><kbd class="sl-hidden md:sl-flex" style="display: none" data-astro-cid-b5kgnn7o><kbd data-astro-cid-b5kgnn7o>Ctrl</kbd><kbd data-astro-cid-b5kgnn7o>K</kbd></kbd></button><dialog style="padding: 0" aria-label="Search" data-astro-cid-b5kgnn7o><div class="dialog-frame sl-flex" data-astro-cid-b5kgnn7o><button data-close-modal class="sl-flex md:sl-hidden" data-astro-cid-b5kgnn7o>Cancel</button><div class="search-container" data-astro-cid-b5kgnn7o><div id="starlight__search" data-astro-cid-b5kgnn7o></div></div></div></dialog></site-search><script>
+	(() => {
+		const openBtn = document.querySelector('button[data-open-modal]');
+		const shortcut = openBtn?.querySelector('kbd');
+		if (!openBtn || !(shortcut instanceof HTMLElement)) return;
+		const platformKey = shortcut.querySelector('kbd');
+		if (platformKey && /(Mac|iPhone|iPod|iPad)/i.test(navigator.platform)) {
+			platformKey.textContent = '⌘';
+			openBtn.setAttribute('aria-keyshortcuts', 'Meta+K');
+		}
+		shortcut.style.display = '';
+	})();
+</script><script type="module" src="/_astro/Search.astro_astro_type_script_index_0_lang.CibB10mu.js"></script></div><div class="sl-hidden md:sl-flex print:hidden right-group" data-astro-cid-by6fddyj><div class="sl-flex social-icons" data-astro-cid-by6fddyj></div><starlight-theme-select data-astro-cid-smhvfpqh="true"><label style="--sl-select-width: 6.25em" data-astro-cid-2z5xp7gb><span class="sr-only" data-astro-cid-2z5xp7gb>Select theme</span><span class="icon label-icon" data-astro-cid-2z5xp7gb><svg class="sl-theme-icon-dark" data-astro-cid-smhvfpqh="true" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;" data-astro-cid-hkc32dio><path d="M21.64 13a1 1 0 0 0-1.05-.14 8.049 8.049 0 0 1-3.37.73 8.15 8.15 0 0 1-8.14-8.1 8.59 8.59 0 0 1 .25-2A1 1 0 0 0 8 2.36a10.14 10.14 0 1 0 14 11.69 1 1 0 0 0-.36-1.05Zm-9.5 6.69A8.14 8.14 0 0 1 7.08 5.22v.27a10.15 10.15 0 0 0 10.14 10.14 9.784 9.784 0 0 0 2.1-.22 8.11 8.11 0 0 1-7.18 4.32v-.04Z"/></svg><svg class="sl-theme-icon-light" data-astro-cid-smhvfpqh="true" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;" data-astro-cid-hkc32dio><path d="M5 12a1 1 0 0 0-1-1H3a1 1 0 0 0 0 2h1a1 1 0 0 0 1-1Zm.64 5-.71.71a1 1 0 0 0 0 1.41 1 1 0 0 0 1.41 0l.71-.71A1 1 0 0 0 5.64 17ZM12 5a1 1 0 0 0 1-1V3a1 1 0 0 0-2 0v1a1 1 0 0 0 1 1Zm5.66 2.34a1 1 0 0 0 .7-.29l.71-.71a1 1 0 1 0-1.41-1.41l-.66.71a1 1 0 0 0 0 1.41 1 1 0 0 0 .66.29Zm-12-.29a1 1 0 0 0 1.41 0 1 1 0 0 0 0-1.41l-.71-.71a1.004 1.004 0 1 0-1.43 1.41l.73.71ZM21 11h-1a1 1 0 0 0 0 2h1a1 1 0 0 0 0-2Zm-2.64 6A1 1 0 0 0 17 18.36l.71.71a1 1 0 0 0 1.41 0 1 1 0 0 0 0-1.41l-.76-.66ZM12 6.5a5.5 5.5 0 1 0 5.5 5.5A5.51 5.51 0 0 0 12 6.5Zm0 9a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Zm0 3.5a1 1 0 0 0-1 1v1a1 1 0 0 0 2 0v-1a1 1 0 0 0-1-1Z"/></svg><svg class="sl-theme-icon-auto" data-astro-cid-smhvfpqh="true" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;" data-astro-cid-hkc32dio><path d="M21 14h-1V7a3 3 0 0 0-3-3H7a3 3 0 0 0-3 3v7H3a1 1 0 0 0-1 1v2a3 3 0 0 0 3 3h14a3 3 0 0 0 3-3v-2a1 1 0 0 0-1-1ZM6 7a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v7H6V7Zm14 10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-1h16v1Z"/></svg></span><select autocomplete="off" data-astro-cid-2z5xp7gb><option value="dark" data-astro-cid-2z5xp7gb>Dark</option><option value="light" data-astro-cid-2z5xp7gb>Light</option><option value="auto" selected data-astro-cid-2z5xp7gb>Auto</option></select><svg class="icon caret" data-astro-cid-2z5xp7gb="true" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;" data-astro-cid-hkc32dio><path d="M17 9.17a1 1 0 0 0-1.41 0L12 12.71 8.46 9.17a1 1 0 1 0-1.41 1.42l4.24 4.24a1.002 1.002 0 0 0 1.42 0L17 10.59a1.002 1.002 0 0 0 0-1.42Z"/></svg></label></starlight-theme-select><script>(() => {
+		const theme = (typeof localStorage !== 'undefined' && localStorage.getItem('starlight-theme'));
+		if (theme) document.querySelectorAll('starlight-theme-select select').forEach((s) => { s.value = theme; });
+	})();</script><script type="module">var e=`starlight-theme`,t=e=>e===`auto`||e===`dark`||e===`light`?e:`auto`,n=()=>t(typeof localStorage<`u`&&localStorage.getItem(e));function r(t){typeof localStorage<`u`&&localStorage.setItem(e,t===`light`||t===`dark`?t:``)}var i=()=>matchMedia(`(prefers-color-scheme: light)`).matches?`light`:`dark`;function a(e){document.querySelectorAll(`starlight-theme-select select`).forEach(t=>{t.value=e}),document.documentElement.dataset.theme=e===`auto`?i():e,r(e)}matchMedia(`(prefers-color-scheme: light)`).addEventListener(`change`,()=>{n()===`auto`&&a(`auto`)});var o=class extends HTMLElement{constructor(){super(),a(n()),this.querySelector(`select`)?.addEventListener(`change`,e=>{e.currentTarget instanceof HTMLSelectElement&&a(t(e.currentTarget.value))})}};customElements.define(`starlight-theme-select`,o);</script><script type="module">var e=class extends HTMLElement{constructor(){super();let e=this.querySelector(`select`);e&&(e.addEventListener(`change`,e=>{e.currentTarget instanceof HTMLSelectElement&&(window.location.pathname=e.currentTarget.value)}),window.addEventListener(`pageshow`,t=>{if(!t.persisted)return;let n=e.querySelector(`option[selected]`)?.index;n!==e.selectedIndex&&(e.selectedIndex=n??0)}))}};customElements.define(`starlight-lang-select`,e);</script></div></div></header><nav class="sidebar print:hidden" aria-label="Main" data-astro-cid-yntsjkba><button popovertarget="starlight__sidebar" class="sl-menu-button sl-flex md:sl-hidden print:hidden" data-astro-cid-r2osgdlg><svg class="open-menu" data-astro-cid-r2osgdlg="true" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;" data-astro-cid-hkc32dio><path d="M3 8h18a1 1 0 1 0 0-2H3a1 1 0 0 0 0 2Zm18 8H3a1 1 0 0 0 0 2h18a1 1 0 0 0 0-2Zm0-5H3a1 1 0 0 0 0 2h18a1 1 0 0 0 0-2Z"/></svg><svg class="close-menu" data-astro-cid-r2osgdlg="true" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;" data-astro-cid-hkc32dio><path d="m13.41 12 6.3-6.29a1.004 1.004 0 1 0-1.42-1.42L12 10.59l-6.29-6.3a1.004 1.004 0 0 0-1.42 1.42l6.3 6.29-6.3 6.29a1 1 0 0 0 0 1.42.998.998 0 0 0 1.42 0l6.29-6.3 6.29 6.3a.999.999 0 0 0 1.42 0 1 1 0 0 0 0-1.42L13.41 12Z"/></svg><span class="sr-only" data-astro-cid-r2osgdlg>Menu</span></button><script type="module">var e=class extends HTMLElement{constructor(){super();let e=matchMedia(`(min-width: 50em)`),t=()=>{this.popover=e.matches?null:`auto`};t(),e.addEventListener(`change`,()=>t()),this.addEventListener(`toggle`,({newState:e})=>this.trapFocus(e===`open`))}trapFocus(e){document.querySelectorAll(`.main-frame, .sl-skip-link`).forEach(t=>{t.toggleAttribute(`inert`,e)})}};customElements.define(`sl-sidebar-pane`,e);</script><sl-sidebar-pane popover id="starlight__sidebar" class="sidebar-pane" data-astro-cid-yntsjkba="true"><div class="sidebar-content sl-flex" data-astro-cid-yntsjkba><sl-sidebar-state-persist data-hash="1hd0esp" data-astro-cid-ipdry5cl="true"><script aria-hidden="true">
+		(() => {
+			try {
+				if (!matchMedia('(min-width: 50em)').matches) return;
+				/** @type {HTMLElement | null} */
+				const target = document.querySelector('sl-sidebar-state-persist');
+				const state = JSON.parse(sessionStorage.getItem('sl-sidebar-state') || '0');
+				if (!target || !state || target.dataset.hash !== state.hash) return;
+				window._starlightScrollRestore = state.scroll;
+				customElements.define(
+					'sl-sidebar-restore',
+					class SidebarRestore extends HTMLElement {
+						connectedCallback() {
+							try {
+								const idx = parseInt(this.dataset.index || '');
+								const details = this.closest('details');
+								if (details && typeof state.open[idx] === 'boolean') details.open = state.open[idx];
+							} catch {}
+						}
+					}
+				);
+			} catch {}
+		})();
+	</script><ul class="top-level" data-astro-cid-rmhv4bp6><li data-astro-cid-rmhv4bp6><details open data-astro-cid-rmhv4bp6><summary data-astro-cid-rmhv4bp6><span class="group-label" data-astro-cid-rmhv4bp6><span class="large" data-astro-cid-rmhv4bp6>Start here</span></span><svg class="caret" data-astro-cid-rmhv4bp6="true" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.25rem;" data-astro-cid-hkc32dio><path d="m14.83 11.29-4.24-4.24a1 1 0 1 0-1.42 1.41L12.71 12l-3.54 3.54a1 1 0 0 0 0 1.41 1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.24-4.24a1.002 1.002 0 0 0 0-1.42Z"/></svg></summary><sl-sidebar-restore data-index="0"></sl-sidebar-restore><ul data-astro-cid-rmhv4bp6><li data-astro-cid-rmhv4bp6><a href="/" data-astro-cid-rmhv4bp6><span data-astro-cid-rmhv4bp6>Overview</span></a></li><li data-astro-cid-rmhv4bp6><a href="/getting-started/" data-astro-cid-rmhv4bp6><span data-astro-cid-rmhv4bp6>Getting started</span></a></li><li data-astro-cid-rmhv4bp6><a href="/pipeline/" data-astro-cid-rmhv4bp6><span data-astro-cid-rmhv4bp6>Solution pipeline</span></a></li><li data-astro-cid-rmhv4bp6><a href="/export/" data-astro-cid-rmhv4bp6><span data-astro-cid-rmhv4bp6>Exporting results</span></a></li></ul></details></li><li data-astro-cid-rmhv4bp6><details open data-astro-cid-rmhv4bp6><summary data-astro-cid-rmhv4bp6><span class="group-label" data-astro-cid-rmhv4bp6><span class="large" data-astro-cid-rmhv4bp6>Data file</span></span><svg class="caret" data-astro-cid-rmhv4bp6="true" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.25rem;" data-astro-cid-hkc32dio><path d="m14.83 11.29-4.24-4.24a1 1 0 1 0-1.42 1.41L12.71 12l-3.54 3.54a1 1 0 0 0 0 1.41 1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.24-4.24a1.002 1.002 0 0 0 0-1.42Z"/></svg></summary><sl-sidebar-restore data-index="1"></sl-sidebar-restore><ul data-astro-cid-rmhv4bp6><li data-astro-cid-rmhv4bp6><a href="/data/blocks/" data-astro-cid-rmhv4bp6><span data-astro-cid-rmhv4bp6>Data blocks</span></a></li><li data-astro-cid-rmhv4bp6><a href="/data/columns/" aria-current="page" data-astro-cid-rmhv4bp6><span data-astro-cid-rmhv4bp6>Block columns</span></a></li><li data-astro-cid-rmhv4bp6><a href="/data/options/" data-astro-cid-rmhv4bp6><span data-astro-cid-rmhv4bp6>Options and constants</span></a></li></ul></details></li><li data-astro-cid-rmhv4bp6><details open data-astro-cid-rmhv4bp6><summary data-astro-cid-rmhv4bp6><span class="group-label" data-astro-cid-rmhv4bp6><span class="large" data-astro-cid-rmhv4bp6>Components</span></span><svg class="caret" data-astro-cid-rmhv4bp6="true" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.25rem;" data-astro-cid-hkc32dio><path d="m14.83 11.29-4.24-4.24a1 1 0 1 0-1.42 1.41L12.71 12l-3.54 3.54a1 1 0 0 0 0 1.41 1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.24-4.24a1.002 1.002 0 0 0 0-1.42Z"/></svg></summary><sl-sidebar-restore data-index="2"></sl-sidebar-restore><ul data-astro-cid-rmhv4bp6><li data-astro-cid-rmhv4bp6><a href="/components/buses/" data-astro-cid-rmhv4bp6><span data-astro-cid-rmhv4bp6>Buses and generators</span></a></li><li data-astro-cid-rmhv4bp6><a href="/components/branches/" data-astro-cid-rmhv4bp6><span data-astro-cid-rmhv4bp6>Lines and transformers</span></a></li><li data-astro-cid-rmhv4bp6><a href="/components/transformer-controls/" data-astro-cid-rmhv4bp6><span data-astro-cid-rmhv4bp6>Tap and phase controls</span></a></li><li data-astro-cid-rmhv4bp6><a href="/components/csc/" data-astro-cid-rmhv4bp6><span data-astro-cid-rmhv4bp6>Series compensators (CSC)</span></a></li><li data-astro-cid-rmhv4bp6><a href="/components/shunts/" data-astro-cid-rmhv4bp6><span data-astro-cid-rmhv4bp6>Shunt banks</span></a></li><li data-astro-cid-rmhv4bp6><a href="/components/svc/" data-astro-cid-rmhv4bp6><span data-astro-cid-rmhv4bp6>Static VAR compensators</span></a></li><li data-astro-cid-rmhv4bp6><a href="/components/hvdc-lcc/" data-astro-cid-rmhv4bp6><span data-astro-cid-rmhv4bp6>HVDC LCC links</span></a></li><li data-astro-cid-rmhv4bp6><a href="/components/network/" data-astro-cid-rmhv4bp6><span data-astro-cid-rmhv4bp6>Network reduction</span></a></li></ul></details></li><li data-astro-cid-rmhv4bp6><details open data-astro-cid-rmhv4bp6><summary data-astro-cid-rmhv4bp6><span class="group-label" data-astro-cid-rmhv4bp6><span class="large" data-astro-cid-rmhv4bp6>Methods</span></span><svg class="caret" data-astro-cid-rmhv4bp6="true" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.25rem;" data-astro-cid-hkc32dio><path d="m14.83 11.29-4.24-4.24a1 1 0 1 0-1.42 1.41L12.71 12l-3.54 3.54a1 1 0 0 0 0 1.41 1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.24-4.24a1.002 1.002 0 0 0 0-1.42Z"/></svg></summary><sl-sidebar-restore data-index="3"></sl-sidebar-restore><ul data-astro-cid-rmhv4bp6><li data-astro-cid-rmhv4bp6><a href="/methods/newton-raphson/" data-astro-cid-rmhv4bp6><span data-astro-cid-rmhv4bp6>Newton-Raphson</span></a></li><li data-astro-cid-rmhv4bp6><a href="/methods/optimization/" data-astro-cid-rmhv4bp6><span data-astro-cid-rmhv4bp6>Optimization power flow</span></a></li><li data-astro-cid-rmhv4bp6><a href="/methods/results/" data-astro-cid-rmhv4bp6><span data-astro-cid-rmhv4bp6>Results and benchmarks</span></a></li></ul></details></li></ul><script aria-hidden="true">
+		(() => {
+			const scroller = document.getElementById('starlight__sidebar');
+			if (!window._starlightScrollRestore || !scroller) return;
+			scroller.scrollTop = window._starlightScrollRestore;
+			delete window._starlightScrollRestore;
+		})();
+	</script></sl-sidebar-state-persist><div class="md:sl-hidden"><div class="mobile-preferences sl-flex" data-astro-cid-p4azlveh><div class="social-icons" data-astro-cid-p4azlveh></div><starlight-theme-select data-astro-cid-smhvfpqh="true"><label style="--sl-select-width: 6.25em" data-astro-cid-2z5xp7gb><span class="sr-only" data-astro-cid-2z5xp7gb>Select theme</span><span class="icon label-icon" data-astro-cid-2z5xp7gb><svg class="sl-theme-icon-dark" data-astro-cid-smhvfpqh="true" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;" data-astro-cid-hkc32dio><path d="M21.64 13a1 1 0 0 0-1.05-.14 8.049 8.049 0 0 1-3.37.73 8.15 8.15 0 0 1-8.14-8.1 8.59 8.59 0 0 1 .25-2A1 1 0 0 0 8 2.36a10.14 10.14 0 1 0 14 11.69 1 1 0 0 0-.36-1.05Zm-9.5 6.69A8.14 8.14 0 0 1 7.08 5.22v.27a10.15 10.15 0 0 0 10.14 10.14 9.784 9.784 0 0 0 2.1-.22 8.11 8.11 0 0 1-7.18 4.32v-.04Z"/></svg><svg class="sl-theme-icon-light" data-astro-cid-smhvfpqh="true" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;" data-astro-cid-hkc32dio><path d="M5 12a1 1 0 0 0-1-1H3a1 1 0 0 0 0 2h1a1 1 0 0 0 1-1Zm.64 5-.71.71a1 1 0 0 0 0 1.41 1 1 0 0 0 1.41 0l.71-.71A1 1 0 0 0 5.64 17ZM12 5a1 1 0 0 0 1-1V3a1 1 0 0 0-2 0v1a1 1 0 0 0 1 1Zm5.66 2.34a1 1 0 0 0 .7-.29l.71-.71a1 1 0 1 0-1.41-1.41l-.66.71a1 1 0 0 0 0 1.41 1 1 0 0 0 .66.29Zm-12-.29a1 1 0 0 0 1.41 0 1 1 0 0 0 0-1.41l-.71-.71a1.004 1.004 0 1 0-1.43 1.41l.73.71ZM21 11h-1a1 1 0 0 0 0 2h1a1 1 0 0 0 0-2Zm-2.64 6A1 1 0 0 0 17 18.36l.71.71a1 1 0 0 0 1.41 0 1 1 0 0 0 0-1.41l-.76-.66ZM12 6.5a5.5 5.5 0 1 0 5.5 5.5A5.51 5.51 0 0 0 12 6.5Zm0 9a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Zm0 3.5a1 1 0 0 0-1 1v1a1 1 0 0 0 2 0v-1a1 1 0 0 0-1-1Z"/></svg><svg class="sl-theme-icon-auto" data-astro-cid-smhvfpqh="true" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;" data-astro-cid-hkc32dio><path d="M21 14h-1V7a3 3 0 0 0-3-3H7a3 3 0 0 0-3 3v7H3a1 1 0 0 0-1 1v2a3 3 0 0 0 3 3h14a3 3 0 0 0 3-3v-2a1 1 0 0 0-1-1ZM6 7a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v7H6V7Zm14 10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-1h16v1Z"/></svg></span><select autocomplete="off" data-astro-cid-2z5xp7gb><option value="dark" data-astro-cid-2z5xp7gb>Dark</option><option value="light" data-astro-cid-2z5xp7gb>Light</option><option value="auto" selected data-astro-cid-2z5xp7gb>Auto</option></select><svg class="icon caret" data-astro-cid-2z5xp7gb="true" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;" data-astro-cid-hkc32dio><path d="M17 9.17a1 1 0 0 0-1.41 0L12 12.71 8.46 9.17a1 1 0 1 0-1.41 1.42l4.24 4.24a1.002 1.002 0 0 0 1.42 0L17 10.59a1.002 1.002 0 0 0 0-1.42Z"/></svg></label></starlight-theme-select><script>(() => {
+		const theme = (typeof localStorage !== 'undefined' && localStorage.getItem('starlight-theme'));
+		if (theme) document.querySelectorAll('starlight-theme-select select').forEach((s) => { s.value = theme; });
+	})();</script></div></div></div></sl-sidebar-pane></nav><div class="main-frame" data-astro-cid-yntsjkba><script type="module">var e=document.getElementById(`starlight__sidebar`),t=e?.querySelector(`sl-sidebar-state-persist`),n=`sl-sidebar-state`,r=()=>{let r=[],i=t?.dataset.hash||``;try{let e=sessionStorage.getItem(n),t=JSON.parse(e||`{}`);Array.isArray(t.open)&&t.hash===i&&(r=t.open)}catch{}return{hash:i,open:r,scroll:e?.scrollTop||0}},i=e=>{try{sessionStorage.setItem(n,JSON.stringify(e))}catch{}},a=()=>i(r()),o=(e,t)=>{let n=r();n.open[t]=e,i(n)};t?.addEventListener(`click`,e=>{if(!(e.target instanceof Element))return;let t=e.target.closest(`summary`)?.closest(`details`);if(!t)return;let n=t.querySelector(`sl-sidebar-restore`),r=parseInt(n?.dataset.index||``);isNaN(r)||o(!t.open,r)}),addEventListener(`visibilitychange`,()=>{document.visibilityState===`hidden`&&a()});</script><div class="lg:sl-flex" data-astro-cid-lrzkfocr><aside class="right-sidebar-container print:hidden" data-astro-cid-lrzkfocr><div class="right-sidebar" data-astro-cid-lrzkfocr><div class="lg:sl-hidden" data-astro-cid-qok35upx><mobile-starlight-toc data-min-h="2" data-max-h="3" data-astro-cid-66cqc7ze="true"><nav aria-labelledby="starlight__on-this-page--mobile" data-astro-cid-66cqc7ze><details id="starlight__mobile-toc" data-astro-cid-66cqc7ze><summary id="starlight__on-this-page--mobile" class="sl-flex" data-astro-cid-66cqc7ze><span class="toggle sl-flex" data-astro-cid-66cqc7ze>On this page<svg class="caret" data-astro-cid-66cqc7ze="true" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1rem;" data-astro-cid-hkc32dio><path d="m14.83 11.29-4.24-4.24a1 1 0 1 0-1.42 1.41L12.71 12l-3.54 3.54a1 1 0 0 0 0 1.41 1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.24-4.24a1.002 1.002 0 0 0 0-1.42Z"/></svg></span><span class="display-current" data-astro-cid-66cqc7ze></span></summary><div class="dropdown" data-astro-cid-66cqc7ze><ul class="isMobile" style="--depth: 0;" data-astro-cid-jugkfwgx><li style="--depth: 0;" data-astro-cid-jugkfwgx><a href="#_top" style="--depth: 0;" data-astro-cid-jugkfwgx><span style="--depth: 0;" data-astro-cid-jugkfwgx>Overview</span></a></li><li style="--depth: 0;" data-astro-cid-jugkfwgx><a href="#dbar--buses" style="--depth: 0;" data-astro-cid-jugkfwgx><span style="--depth: 0;" data-astro-cid-jugkfwgx>DBAR — buses</span></a></li><li style="--depth: 0;" data-astro-cid-jugkfwgx><a href="#dlin--lines-and-transformers" style="--depth: 0;" data-astro-cid-jugkfwgx><span style="--depth: 0;" data-astro-cid-jugkfwgx>DLIN — lines and transformers</span></a></li><li style="--depth: 0;" data-astro-cid-jugkfwgx><a href="#dcsc--controllable-series-compensators" style="--depth: 0;" data-astro-cid-jugkfwgx><span style="--depth: 0;" data-astro-cid-jugkfwgx>DCSC — controllable series compensators</span></a></li><li style="--depth: 0;" data-astro-cid-jugkfwgx><a href="#dbsh--dbsh_bank--shunt-banks" style="--depth: 0;" data-astro-cid-jugkfwgx><span style="--depth: 0;" data-astro-cid-jugkfwgx>DBSH / DBSH_BANK — shunt banks</span></a></li><li style="--depth: 0;" data-astro-cid-jugkfwgx><a href="#dcer--static-var-compensators" style="--depth: 0;" data-astro-cid-jugkfwgx><span style="--depth: 0;" data-astro-cid-jugkfwgx>DCER — static VAR compensators</span></a></li><li style="--depth: 0;" data-astro-cid-jugkfwgx><a href="#dctr--transformer-controls" style="--depth: 0;" data-astro-cid-jugkfwgx><span style="--depth: 0;" data-astro-cid-jugkfwgx>DCTR — transformer controls</span></a></li><li style="--depth: 0;" data-astro-cid-jugkfwgx><a href="#dger--generators" style="--depth: 0;" data-astro-cid-jugkfwgx><span style="--depth: 0;" data-astro-cid-jugkfwgx>DGER — generators</span></a></li><li style="--depth: 0;" data-astro-cid-jugkfwgx><a href="#dglt--voltage-limit-groups" style="--depth: 0;" data-astro-cid-jugkfwgx><span style="--depth: 0;" data-astro-cid-jugkfwgx>DGLT — voltage limit groups</span></a></li><li style="--depth: 0;" data-astro-cid-jugkfwgx><a href="#hvdc-blocks" style="--depth: 0;" data-astro-cid-jugkfwgx><span style="--depth: 0;" data-astro-cid-jugkfwgx>HVDC blocks</span></a></li></ul></div></details></nav></mobile-starlight-toc><script type="module" src="/_astro/MobileTableOfContents.astro_astro_type_script_index_0_lang.C3fM4Kra.js"></script></div><div class="right-sidebar-panel sl-hidden lg:sl-block" data-astro-cid-qok35upx><div class="sl-container" data-astro-cid-qok35upx><starlight-toc data-min-h="2" data-max-h="3"><nav aria-labelledby="starlight__on-this-page"><h2 id="starlight__on-this-page">On this page</h2><ul style="--depth: 0;" data-astro-cid-jugkfwgx><li style="--depth: 0;" data-astro-cid-jugkfwgx><a href="#_top" style="--depth: 0;" data-astro-cid-jugkfwgx><span style="--depth: 0;" data-astro-cid-jugkfwgx>Overview</span></a></li><li style="--depth: 0;" data-astro-cid-jugkfwgx><a href="#dbar--buses" style="--depth: 0;" data-astro-cid-jugkfwgx><span style="--depth: 0;" data-astro-cid-jugkfwgx>DBAR — buses</span></a></li><li style="--depth: 0;" data-astro-cid-jugkfwgx><a href="#dlin--lines-and-transformers" style="--depth: 0;" data-astro-cid-jugkfwgx><span style="--depth: 0;" data-astro-cid-jugkfwgx>DLIN — lines and transformers</span></a></li><li style="--depth: 0;" data-astro-cid-jugkfwgx><a href="#dcsc--controllable-series-compensators" style="--depth: 0;" data-astro-cid-jugkfwgx><span style="--depth: 0;" data-astro-cid-jugkfwgx>DCSC — controllable series compensators</span></a></li><li style="--depth: 0;" data-astro-cid-jugkfwgx><a href="#dbsh--dbsh_bank--shunt-banks" style="--depth: 0;" data-astro-cid-jugkfwgx><span style="--depth: 0;" data-astro-cid-jugkfwgx>DBSH / DBSH_BANK — shunt banks</span></a></li><li style="--depth: 0;" data-astro-cid-jugkfwgx><a href="#dcer--static-var-compensators" style="--depth: 0;" data-astro-cid-jugkfwgx><span style="--depth: 0;" data-astro-cid-jugkfwgx>DCER — static VAR compensators</span></a></li><li style="--depth: 0;" data-astro-cid-jugkfwgx><a href="#dctr--transformer-controls" style="--depth: 0;" data-astro-cid-jugkfwgx><span style="--depth: 0;" data-astro-cid-jugkfwgx>DCTR — transformer controls</span></a></li><li style="--depth: 0;" data-astro-cid-jugkfwgx><a href="#dger--generators" style="--depth: 0;" data-astro-cid-jugkfwgx><span style="--depth: 0;" data-astro-cid-jugkfwgx>DGER — generators</span></a></li><li style="--depth: 0;" data-astro-cid-jugkfwgx><a href="#dglt--voltage-limit-groups" style="--depth: 0;" data-astro-cid-jugkfwgx><span style="--depth: 0;" data-astro-cid-jugkfwgx>DGLT — voltage limit groups</span></a></li><li style="--depth: 0;" data-astro-cid-jugkfwgx><a href="#hvdc-blocks" style="--depth: 0;" data-astro-cid-jugkfwgx><span style="--depth: 0;" data-astro-cid-jugkfwgx>HVDC blocks</span></a></li></ul></nav></starlight-toc><script type="module" src="/_astro/TableOfContents.astro_astro_type_script_index_0_lang.BpJaGz7G.js"></script></div></div></div></aside><div class="main-pane" data-astro-cid-lrzkfocr><main data-pagefind-body lang="en" dir="ltr" data-astro-cid-g5ptsecz><div class="content-panel" data-astro-cid-a7po4psb><div class="sl-container" data-astro-cid-a7po4psb><h1 id="_top" data-astro-cid-bebwqqxs>Block columns</h1></div></div><div class="content-panel" data-astro-cid-a7po4psb><div class="sl-container" data-astro-cid-a7po4psb><div class="sl-markdown-content"><p>This page uses three conventions:</p>
+<ul>
+<li>Percent impedances are on the system base <code dir="auto">BASE</code> (100 MVA).</li>
+<li>Mvar values for shunts and SVCs are given at 1 pu voltage.</li>
+<li>The <strong>Use</strong> column states how the code uses each field. A dash (—) means the field is read but not used.</li>
+</ul>
+<div class="sl-heading-wrapper level-h2"><h2 id="dbar--buses"><code dir="auto">DBAR</code> — buses</h2><a class="sl-anchor-link" href="#dbar--buses"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 1 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 0 0-1.42-1.42m8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 1 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 0 0 0 1.42 1 1 0 0 0 1.42 0l3.88-3.89a4.49 4.49 0 0 0 0-6.33M8.83 15.17a1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.92-4.92a1 1 0 1 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “DBAR — buses”</span></a></div>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Meaning</th>
+<th>Use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code dir="auto">No</code></td>
+<td>Bus number</td>
+<td>Bus identifier</td>
+</tr>
+<tr>
+<td><code dir="auto">Name</code></td>
+<td>Bus name</td>
+<td>Reporting</td>
+</tr>
+<tr>
+<td><code dir="auto">Tb</code></td>
+<td>Bus type: 0 PQ, 1 PV, 2 reference (Vθ), 3 PQ with voltage limits</td>
+<td>Bus type</td>
+</tr>
+<tr>
+<td><code dir="auto">Are</code></td>
+<td>Area number</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code dir="auto">V</code></td>
+<td>Voltage (pu): solved value or set-point</td>
+<td>Initial voltage; PV/reference set-point; SVC and LTC references</td>
+</tr>
+<tr>
+<td><code dir="auto">A0</code></td>
+<td>Angle (degrees)</td>
+<td>Initial angle and reference angle</td>
+</tr>
+<tr>
+<td><code dir="auto">Pg</code>, <code dir="auto">Qg</code></td>
+<td>Active (MW) and reactive (Mvar) generation</td>
+<td>Scheduled injection</td>
+</tr>
+<tr>
+<td><code dir="auto">Qgn</code>, <code dir="auto">Qgm</code></td>
+<td>Minimum and maximum reactive generation (Mvar)</td>
+<td>PV reactive limits (<code dir="auto">QLIM</code>)</td>
+</tr>
+<tr>
+<td><code dir="auto">Bctrl</code></td>
+<td>Remotely controlled bus</td>
+<td>— (PV buses hold their own <code dir="auto">V</code>)</td>
+</tr>
+<tr>
+<td><code dir="auto">Pl</code>, <code dir="auto">Ql</code></td>
+<td>Active and reactive load (MW, Mvar)</td>
+<td>Constant-power load</td>
+</tr>
+<tr>
+<td><code dir="auto">Sh</code></td>
+<td>Bus shunt (Mvar at 1 pu; positive is capacitive)</td>
+<td>Shunt susceptance <code dir="auto">Sh/BASE</code></td>
+</tr>
+<tr>
+<td><code dir="auto">Gb</code></td>
+<td>Base-voltage group (→ <code dir="auto">DGBT</code>)</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code dir="auto">Gl</code></td>
+<td>Voltage-limit group (→ <code dir="auto">DGLT</code>)</td>
+<td><code dir="auto">Vmin</code>/<code dir="auto">Vmax</code></td>
+</tr>
+<tr>
+<td><code dir="auto">Vf</code></td>
+<td>Load-definition voltage</td>
+<td>— (constant-power loads)</td>
+</tr>
+<tr>
+<td><code dir="auto">M</code></td>
+<td>Display mode</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code dir="auto">E</code>, <code dir="auto">O</code></td>
+<td>State and operation</td>
+<td>Bus kept only if <code dir="auto">O = "A"</code> and <code dir="auto">E ≠ "D"</code></td>
+</tr>
+</tbody>
+</table>
+<div class="sl-heading-wrapper level-h2"><h2 id="dlin--lines-and-transformers"><code dir="auto">DLIN</code> — lines and transformers</h2><a class="sl-anchor-link" href="#dlin--lines-and-transformers"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 1 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 0 0-1.42-1.42m8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 1 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 0 0 0 1.42 1 1 0 0 0 1.42 0l3.88-3.89a4.49 4.49 0 0 0 0-6.33M8.83 15.17a1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.92-4.92a1 1 0 1 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “DLIN — lines and transformers”</span></a></div>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Meaning</th>
+<th>Use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code dir="auto">I</code>, <code dir="auto">J</code>, <code dir="auto">Nc</code></td>
+<td>From bus, to bus, and circuit number</td>
+<td>Branch key</td>
+</tr>
+<tr>
+<td><code dir="auto">Si</code>, <code dir="auto">Sj</code></td>
+<td>Terminal switch state at <code dir="auto">I</code> / <code dir="auto">J</code> (<code dir="auto">L</code> on, <code dir="auto">D</code> off)</td>
+<td>Branch removed if either is <code dir="auto">D</code></td>
+</tr>
+<tr>
+<td><code dir="auto">O</code>, <code dir="auto">E</code></td>
+<td>Operation and state</td>
+<td>Branch removed unless <code dir="auto">O = "A"</code> and <code dir="auto">E ≠ "D"</code></td>
+</tr>
+<tr>
+<td><code dir="auto">Prop</code></td>
+<td>Owner flag</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code dir="auto">R</code>, <code dir="auto">X</code></td>
+<td>Series resistance and reactance (%)</td>
+<td><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>r</mi><mo>=</mo><mi>R</mi><mi mathvariant="normal">/</mi><mn>100</mn></mrow><annotation encoding="application/x-tex">r = R/100</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.0278em;">r</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.0077em;">R</span><span class="mord">/100</span></span></span></span>, <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>x</mi><mo>=</mo><mi>X</mi><mi mathvariant="normal">/</mi><mn>100</mn></mrow><annotation encoding="application/x-tex">x = X/100</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal">x</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.0785em;">X</span><span class="mord">/100</span></span></span></span> pu</td>
+</tr>
+<tr>
+<td><code dir="auto">Bshl</code></td>
+<td>Total line charging (Mvar at 1 pu)</td>
+<td><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>b</mi><mo>=</mo><mtext>Bshl</mtext><mi mathvariant="normal">/</mi><mtext>BASE</mtext></mrow><annotation encoding="application/x-tex">b = \text{Bshl}/\text{BASE}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6944em;"></span><span class="mord mathnormal">b</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord text"><span class="mord">Bshl</span></span><span class="mord">/</span><span class="mord text"><span class="mord">BASE</span></span></span></span></span>, split half per end</td>
+</tr>
+<tr>
+<td><code dir="auto">Tap</code></td>
+<td>Off-nominal tap at the <code dir="auto">I</code> side; 0 or blank means 1.0</td>
+<td>Tap ratio <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi></mrow><annotation encoding="application/x-tex">a</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal">a</span></span></span></span></td>
+</tr>
+<tr>
+<td><code dir="auto">Tmn</code>, <code dir="auto">Tmx</code></td>
+<td>Tap limits</td>
+<td>LTC when <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>&#x3C;</mo><msub><mi>T</mi><mrow><mi>m</mi><mi>n</mi></mrow></msub><mo>&#x3C;</mo><msub><mi>T</mi><mrow><mi>m</mi><mi>x</mi></mrow></msub></mrow><annotation encoding="application/x-tex">0 &#x3C; T_{mn} &#x3C; T_{mx}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6835em;vertical-align:-0.0391em;"></span><span class="mord">0</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">&#x3C;</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.1389em;">T</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">mn</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">&#x3C;</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.1389em;">T</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">m</span><span class="mord mathnormal mtight">x</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></td>
+</tr>
+<tr>
+<td><code dir="auto">Psh</code></td>
+<td>Phase shift (degrees)</td>
+<td>Phase <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>φ</mi><mo>=</mo><mo>−</mo><mtext>Psh</mtext></mrow><annotation encoding="application/x-tex">\varphi = -\text{Psh}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord mathnormal">φ</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7778em;vertical-align:-0.0833em;"></span><span class="mord">−</span><span class="mord text"><span class="mord">Psh</span></span></span></span></span> (rad)</td>
+</tr>
+<tr>
+<td><code dir="auto">Bctrl</code></td>
+<td>LTC-controlled bus: <code dir="auto">From Bus</code>, <code dir="auto">To Bus</code>, or a bus number (sign ignored)</td>
+<td>LTC target bus</td>
+</tr>
+<tr>
+<td><code dir="auto">Cn</code>, <code dir="auto">Ce</code></td>
+<td>Normal and emergency rating (MVA)</td>
+<td>Stored rating</td>
+</tr>
+<tr>
+<td><code dir="auto">Ns</code></td>
+<td>Number of tap steps</td>
+<td>— (taps are continuous)</td>
+</tr>
+<tr>
+<td><code dir="auto">Cq</code></td>
+<td>Additional rating</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<div class="sl-heading-wrapper level-h2"><h2 id="dcsc--controllable-series-compensators"><code dir="auto">DCSC</code> — controllable series compensators</h2><a class="sl-anchor-link" href="#dcsc--controllable-series-compensators"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 1 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 0 0-1.42-1.42m8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 1 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 0 0 0 1.42 1 1 0 0 0 1.42 0l3.88-3.89a4.49 4.49 0 0 0 0-6.33M8.83 15.17a1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.92-4.92a1 1 0 1 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “DCSC — controllable series compensators”</span></a></div>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Meaning</th>
+<th>Use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code dir="auto">I</code>, <code dir="auto">J</code>, <code dir="auto">Nc</code></td>
+<td>Terminals and circuit</td>
+<td>Branch key (a standalone circuit)</td>
+</tr>
+<tr>
+<td><code dir="auto">O</code>, <code dir="auto">E</code></td>
+<td>Operation and state</td>
+<td>In-service filter</td>
+</tr>
+<tr>
+<td><code dir="auto">Prop</code></td>
+<td>Owner flag</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code dir="auto">Byp</code></td>
+<td>Bypass breaker: <code dir="auto">L</code> closed (bypassed), <code dir="auto">D</code> open</td>
+<td><code dir="auto">L</code> means a short circuit</td>
+</tr>
+<tr>
+<td><code dir="auto">Xmin</code>, <code dir="auto">Xmax</code></td>
+<td>Reactance limits (%)</td>
+<td>Fallback reactance if <code dir="auto">Xv</code> is blank</td>
+</tr>
+<tr>
+<td><code dir="auto">Xv</code></td>
+<td>Present reactance (%), negative for capacitive</td>
+<td>Series reactance</td>
+</tr>
+<tr>
+<td><code dir="auto">Ctrl</code></td>
+<td>Control mode: <code dir="auto">X</code> constant reactance, <code dir="auto">P</code> power, <code dir="auto">I</code> current</td>
+<td>Treated as constant <code dir="auto">Xv</code></td>
+</tr>
+<tr>
+<td><code dir="auto">Vsp</code></td>
+<td>Control set-point</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code dir="auto">Ext</code></td>
+<td>Measuring terminal</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code dir="auto">Nst</code></td>
+<td>Number of stages</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code dir="auto">Cdcsc</code></td>
+<td>Rating (MVA)</td>
+<td>Stored rating</td>
+</tr>
+</tbody>
+</table>
+<div class="sl-heading-wrapper level-h2"><h2 id="dbsh--dbsh_bank--shunt-banks"><code dir="auto">DBSH</code> / <code dir="auto">DBSH_BANK</code> — shunt banks</h2><a class="sl-anchor-link" href="#dbsh--dbsh_bank--shunt-banks"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 1 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 0 0-1.42-1.42m8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 1 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 0 0 0 1.42 1 1 0 0 0 1.42 0l3.88-3.89a4.49 4.49 0 0 0 0-6.33M8.83 15.17a1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.92-4.92a1 1 0 1 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “DBSH / DBSH_BANK — shunt banks”</span></a></div>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Meaning</th>
+<th>Use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code dir="auto">I</code></td>
+<td>Bus</td>
+<td>Bus shunt location</td>
+</tr>
+<tr>
+<td><code dir="auto">J</code>, <code dir="auto">Nc</code></td>
+<td>0 for a bus shunt; otherwise the line <code dir="auto">I–J–Nc</code> carrying a line shunt</td>
+<td>Line shunt circuit</td>
+</tr>
+<tr>
+<td><code dir="auto">Extr</code></td>
+<td>Line terminal where a line shunt is connected</td>
+<td>Line shunt bus</td>
+</tr>
+<tr>
+<td><code dir="auto">O</code></td>
+<td>Operation</td>
+<td>In-service filter</td>
+</tr>
+<tr>
+<td><code dir="auto">Ctrl</code></td>
+<td><code dir="auto">F</code> fixed, <code dir="auto">D</code> discrete, <code dir="auto">C</code> continuous</td>
+<td>Fixed or voltage-controlled</td>
+</tr>
+<tr>
+<td><code dir="auto">Vmn</code>, <code dir="auto">Vmx</code></td>
+<td>Voltage band of the controlled bus (pu)</td>
+<td>Switching band</td>
+</tr>
+<tr>
+<td><code dir="auto">Bctrl</code></td>
+<td>Controlled bus</td>
+<td>Control target</td>
+</tr>
+<tr>
+<td><code dir="auto">Qini</code></td>
+<td>Initial injection (Mvar) when no bank groups exist</td>
+<td>Single-stage shunt</td>
+</tr>
+<tr>
+<td><code dir="auto">TCtrl</code></td>
+<td>Control type</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code dir="auto">Clr</code></td>
+<td><code dir="auto">S</code> clears the <code dir="auto">DBAR</code> <code dir="auto">Sh</code> value of the bus</td>
+<td>Applied to bus shunts</td>
+</tr>
+<tr>
+<td><code dir="auto">DBSH_BANK.Parent</code></td>
+<td>Index of the owning <code dir="auto">DBSH</code> record, counting from 1</td>
+<td>Group ownership</td>
+</tr>
+<tr>
+<td><code dir="auto">DBSH_BANK.G</code></td>
+<td>Group number</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code dir="auto">DBSH_BANK.O</code>, <code dir="auto">E</code></td>
+<td>Operation and state</td>
+<td>In-service filter</td>
+</tr>
+<tr>
+<td><code dir="auto">DBSH_BANK.U</code></td>
+<td>Units installed</td>
+<td>Maximum units</td>
+</tr>
+<tr>
+<td><code dir="auto">DBSH_BANK.UOp</code></td>
+<td>Units in operation</td>
+<td>Initial units</td>
+</tr>
+<tr>
+<td><code dir="auto">DBSH_BANK.Sht</code></td>
+<td>Mvar per unit; positive is capacitor, negative is reactor</td>
+<td>Unit size</td>
+</tr>
+</tbody>
+</table>
+<div class="sl-heading-wrapper level-h2"><h2 id="dcer--static-var-compensators"><code dir="auto">DCER</code> — static VAR compensators</h2><a class="sl-anchor-link" href="#dcer--static-var-compensators"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 1 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 0 0-1.42-1.42m8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 1 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 0 0 0 1.42 1 1 0 0 0 1.42 0l3.88-3.89a4.49 4.49 0 0 0 0-6.33M8.83 15.17a1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.92-4.92a1 1 0 1 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “DCER — static VAR compensators”</span></a></div>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Meaning</th>
+<th>Use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code dir="auto">Bus</code></td>
+<td>SVC terminal bus</td>
+<td>Device bus</td>
+</tr>
+<tr>
+<td><code dir="auto">O</code>, <code dir="auto">E</code></td>
+<td>Operation and state</td>
+<td>In-service filter</td>
+</tr>
+<tr>
+<td><code dir="auto">G</code>, <code dir="auto">Un</code></td>
+<td>Group and number of units</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code dir="auto">Bctrl</code></td>
+<td>Controlled bus</td>
+<td>Control target</td>
+</tr>
+<tr>
+<td><code dir="auto">Incl</code></td>
+<td>Droop slope (%)</td>
+<td><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>m</mi><mo>=</mo><mtext>Incl</mtext><mi mathvariant="normal">/</mi><mn>100</mn></mrow><annotation encoding="application/x-tex">m = \text{Incl}/100</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal">m</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord text"><span class="mord">Incl</span></span><span class="mord">/100</span></span></span></span></td>
+</tr>
+<tr>
+<td><code dir="auto">Qg</code></td>
+<td>Present output (Mvar)</td>
+<td>Initial <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>q</mi></mrow><annotation encoding="application/x-tex">q</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord mathnormal" style="margin-right:0.0359em;">q</span></span></span></span></td>
+</tr>
+<tr>
+<td><code dir="auto">Qgn</code>, <code dir="auto">Qgm</code></td>
+<td>Inductive and capacitive limits at 1 pu (Mvar)</td>
+<td><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>Q</mi><mi>min</mi><mo>⁡</mo></msub></mrow><annotation encoding="application/x-tex">Q_{\min}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8778em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal">Q</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3175em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mop mtight"><span class="mtight">m</span><span class="mtight">i</span><span class="mtight">n</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span>, <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>Q</mi><mi>max</mi><mo>⁡</mo></msub></mrow><annotation encoding="application/x-tex">Q_{\max}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8778em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal">Q</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mop mtight"><span class="mtight">m</span><span class="mtight">a</span><span class="mtight">x</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></td>
+</tr>
+<tr>
+<td><code dir="auto">Ctrl</code></td>
+<td><code dir="auto">P</code> reactive-power droop, <code dir="auto">I</code> current droop</td>
+<td>Control law</td>
+</tr>
+</tbody>
+</table>
+<div class="sl-heading-wrapper level-h2"><h2 id="dctr--transformer-controls"><code dir="auto">DCTR</code> — transformer controls</h2><a class="sl-anchor-link" href="#dctr--transformer-controls"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 1 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 0 0-1.42-1.42m8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 1 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 0 0 0 1.42 1 1 0 0 0 1.42 0l3.88-3.89a4.49 4.49 0 0 0 0-6.33M8.83 15.17a1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.92-4.92a1 1 0 1 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “DCTR — transformer controls”</span></a></div>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Meaning</th>
+<th>Use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code dir="auto">I</code>, <code dir="auto">J</code>, <code dir="auto">Nc</code></td>
+<td>Transformer circuit (must exist in <code dir="auto">DLIN</code>)</td>
+<td>Branch key</td>
+</tr>
+<tr>
+<td><code dir="auto">O</code></td>
+<td>Operation</td>
+<td>In-service filter</td>
+</tr>
+<tr>
+<td><code dir="auto">Vmn</code>, <code dir="auto">Vmx</code>, <code dir="auto">VCtrl</code></td>
+<td>Voltage-band control data</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code dir="auto">M</code></td>
+<td>Control mode</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code dir="auto">Fmin</code>, <code dir="auto">Fmax</code></td>
+<td>Phase-angle limits (degrees, <code dir="auto">Psh</code> convention)</td>
+<td>Phase limits</td>
+</tr>
+<tr>
+<td><code dir="auto">PCtrl</code></td>
+<td><code dir="auto">P</code> active-power control</td>
+<td>Enables flow control</td>
+</tr>
+<tr>
+<td><code dir="auto">Vsp</code></td>
+<td>Scheduled active power (MW)</td>
+<td>Flow set-point</td>
+</tr>
+<tr>
+<td><code dir="auto">Ext</code></td>
+<td>Terminal where the flow is measured</td>
+<td>Measuring terminal</td>
+</tr>
+<tr>
+<td><code dir="auto">Ns</code>, <code dir="auto">IdCurvaPts</code></td>
+<td>Steps and curve id</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<div class="sl-heading-wrapper level-h2"><h2 id="dger--generators"><code dir="auto">DGER</code> — generators</h2><a class="sl-anchor-link" href="#dger--generators"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 1 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 0 0-1.42-1.42m8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 1 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 0 0 0 1.42 1 1 0 0 0 1.42 0l3.88-3.89a4.49 4.49 0 0 0 0-6.33M8.83 15.17a1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.92-4.92a1 1 0 1 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “DGER — generators”</span></a></div>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Meaning</th>
+<th>Use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code dir="auto">No</code></td>
+<td>Bus</td>
+<td>Generator bus</td>
+</tr>
+<tr>
+<td><code dir="auto">O</code></td>
+<td>Operation</td>
+<td>Availability</td>
+</tr>
+<tr>
+<td><code dir="auto">Pgn</code>, <code dir="auto">Pgm</code></td>
+<td>Minimum and maximum active power (MW)</td>
+<td>Stored on the bus; not added to the schedule</td>
+</tr>
+<tr>
+<td>other</td>
+<td>Participation, power factor, and machine data</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<div class="sl-heading-wrapper level-h2"><h2 id="dglt--voltage-limit-groups"><code dir="auto">DGLT</code> — voltage limit groups</h2><a class="sl-anchor-link" href="#dglt--voltage-limit-groups"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 1 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 0 0-1.42-1.42m8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 1 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 0 0 0 1.42 1 1 0 0 0 1.42 0l3.88-3.89a4.49 4.49 0 0 0 0-6.33M8.83 15.17a1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.92-4.92a1 1 0 1 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “DGLT — voltage limit groups”</span></a></div>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Meaning</th>
+<th>Use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code dir="auto">G</code></td>
+<td>Group code (<code dir="auto">DBAR.Gl</code>)</td>
+<td>Lookup key</td>
+</tr>
+<tr>
+<td><code dir="auto">Vmn</code>, <code dir="auto">Vmx</code></td>
+<td>Normal operating limits (pu)</td>
+<td>Bus <code dir="auto">Vmin</code>/<code dir="auto">Vmax</code></td>
+</tr>
+<tr>
+<td><code dir="auto">Vmne</code>, <code dir="auto">Vmxe</code></td>
+<td>Emergency limits</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<div class="sl-heading-wrapper level-h2"><h2 id="hvdc-blocks">HVDC blocks</h2><a class="sl-anchor-link" href="#hvdc-blocks"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 1 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 0 0-1.42-1.42m8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 1 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 0 0 0 1.42 1 1 0 0 0 1.42 0l3.88-3.89a4.49 4.49 0 0 0 0-6.33M8.83 15.17a1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.92-4.92a1 1 0 1 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “HVDC blocks”</span></a></div>
+<table>
+<thead>
+<tr>
+<th>Block.Column</th>
+<th>Meaning</th>
+<th>Use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code dir="auto">DCLI.I</code>, <code dir="auto">DCLI.J</code></td>
+<td>DC buses at the line ends</td>
+<td>Pairs converters into a link</td>
+</tr>
+<tr>
+<td><code dir="auto">DCLI.R</code></td>
+<td>DC line resistance (Ω)</td>
+<td>Losses <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>I</mi><mn>2</mn></msup><mi>R</mi></mrow><annotation encoding="application/x-tex">I^2R</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0785em;">I</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span><span class="mord mathnormal" style="margin-right:0.0077em;">R</span></span></span></span></td>
+</tr>
+<tr>
+<td><code dir="auto">DCLI.O</code></td>
+<td>Operation</td>
+<td>In-service filter</td>
+</tr>
+<tr>
+<td><code dir="auto">DCNV.No</code></td>
+<td>Converter number (→ <code dir="auto">DCCV.No</code>)</td>
+<td>Control lookup</td>
+</tr>
+<tr>
+<td><code dir="auto">DCNV.Bac</code>, <code dir="auto">DCNV.Bdc</code></td>
+<td>AC bus and DC bus</td>
+<td>Terminal buses</td>
+</tr>
+<tr>
+<td><code dir="auto">DCNV.Modo</code></td>
+<td><code dir="auto">R</code> rectifier or <code dir="auto">I</code> inverter</td>
+<td>Converter role</td>
+</tr>
+<tr>
+<td><code dir="auto">DCNV.P</code></td>
+<td>Number of bridges</td>
+<td>Bridge voltage multiplier</td>
+</tr>
+<tr>
+<td><code dir="auto">DCNV.Xc</code></td>
+<td>Commutation reactance (% on <code dir="auto">Snt</code>)</td>
+<td>Overlap angle</td>
+</tr>
+<tr>
+<td><code dir="auto">DCNV.Vfs</code></td>
+<td>Converter transformer secondary voltage (kV)</td>
+<td>Overlap angle and tap</td>
+</tr>
+<tr>
+<td><code dir="auto">DCNV.Snt</code></td>
+<td>Converter transformer rating (MVA)</td>
+<td>Reactance in Ω</td>
+</tr>
+<tr>
+<td><code dir="auto">DCCV.F</code></td>
+<td><code dir="auto">F</code> marks the DC slack converter, which absorbs the line losses</td>
+<td>Loss allocation</td>
+</tr>
+<tr>
+<td><code dir="auto">DCCV.TCnv</code></td>
+<td><code dir="auto">P</code> constant power</td>
+<td>Only power-controlled links are modeled</td>
+</tr>
+<tr>
+<td><code dir="auto">DCCV.Vsp</code></td>
+<td>Power order (MW)</td>
+<td><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>P</mi><mrow><mi>d</mi><mi>c</mi></mrow></msub></mrow><annotation encoding="application/x-tex">P_{dc}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.1389em;">P</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">d</span><span class="mord mathnormal mtight">c</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></td>
+</tr>
+<tr>
+<td><code dir="auto">DCCV.Ang</code></td>
+<td>Firing angle α (rectifier) or extinction angle γ (inverter), degrees</td>
+<td>Reactive consumption</td>
+</tr>
+<tr>
+<td><code dir="auto">DCCV.Tmn</code>, <code dir="auto">DCCV.Tmx</code>, <code dir="auto">DCCV.Ttr</code></td>
+<td>Converter tap limits and present tap</td>
+<td>Tap control</td>
+</tr>
+<tr>
+<td><code dir="auto">DCBA.V</code></td>
+<td>DC bus voltage (kV)</td>
+<td><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>V</mi><mrow><mi>d</mi><mi>c</mi></mrow></msub></mrow><annotation encoding="application/x-tex">V_{dc}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.2222em;">V</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:-0.2222em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">d</span><span class="mord mathnormal mtight">c</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></td>
+</tr>
+<tr>
+<td><code dir="auto">DCBA.Elo</code></td>
+<td>Owning link (→ <code dir="auto">DELO.No</code>)</td>
+<td>Link lookup</td>
+</tr>
+<tr>
+<td><code dir="auto">DELO.V</code></td>
+<td>Link base voltage (kV)</td>
+<td>Loss treatment and tap model</td>
+</tr>
+<tr>
+<td><code dir="auto">DELO.Name</code></td>
+<td>Link name</td>
+<td>Reporting</td>
+</tr>
+</tbody>
+</table></div><footer class="sl-flex" data-astro-cid-ddtxxk7k><div class="meta sl-flex" data-astro-cid-ddtxxk7k></div><div class="pagination-links print:hidden" dir="ltr" data-astro-cid-b5raizh3><a href="/data/blocks/" rel="prev" data-astro-cid-b5raizh3><svg data-astro-cid-b5raizh3="true" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.5rem;" data-astro-cid-hkc32dio><path d="M17 11H9.41l3.3-3.29a1.004 1.004 0 1 0-1.42-1.42l-5 5a1 1 0 0 0-.21.33 1 1 0 0 0 0 .76 1 1 0 0 0 .21.33l5 5a1.002 1.002 0 0 0 1.639-.325 1 1 0 0 0-.219-1.095L9.41 13H17a1 1 0 0 0 0-2Z"/></svg><span data-astro-cid-b5raizh3>Previous<br data-astro-cid-b5raizh3><span class="link-title" data-astro-cid-b5raizh3>Data blocks</span></span></a><a href="/data/options/" rel="next" data-astro-cid-b5raizh3><svg data-astro-cid-b5raizh3="true" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.5rem;" data-astro-cid-hkc32dio><path d="M17.92 11.62a1.001 1.001 0 0 0-.21-.33l-5-5a1.003 1.003 0 1 0-1.42 1.42l3.3 3.29H7a1 1 0 0 0 0 2h7.59l-3.3 3.29a1.002 1.002 0 0 0 .325 1.639 1 1 0 0 0 1.095-.219l5-5a1 1 0 0 0 .21-.33 1 1 0 0 0 0-.76Z"/></svg><span data-astro-cid-b5raizh3>Next<br data-astro-cid-b5raizh3><span class="link-title" data-astro-cid-b5raizh3>Options and constants</span></span></a></div></footer></div></div></main></div></div></div></div></body></html>
