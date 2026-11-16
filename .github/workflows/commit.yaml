@@ -1,0 +1,60 @@
+name: on-commit
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, edited]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions: {}
+
+jobs:
+  labeler:
+    name: apply labels
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: write # Required for actions/labeler to add and sync pull request labels.
+      issues: write # Required for actions/labeler when interacting with issue-style label APIs.
+    runs-on: [ubuntu-latest]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/labeler@bf12e9b00b37c5c0ca2b87b79b2daf7891dbda13 # v7.0.0
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          configuration-path: .github/labeler.yaml
+          sync-labels: true
+
+  lint-commit-messages:
+    name: lint commit message
+    runs-on: [ubuntu-latest]
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+      - name: Install uv
+        uses: astral-sh/setup-uv@b75dde52aef63a238519e7aecbbe79a4a52e4315 # v7
+      - name: Commitizen check
+        run: |
+          uvx --from commitizen cz check --rev-range HEAD^!
+  lint-pr-title:
+    # default: lints titles using https://github.com/commitizen/conventional-commit-types
+    name: lint pr title
+    runs-on: [ubuntu-latest]
+    timeout-minutes: 5
+    permissions:
+      pull-requests: read # Required to read pull request metadata for title linting.
+    steps:
+      - uses: amannn/action-semantic-pull-request@48f256284bd46cdaab1048c3721360e808335d50 # v6.1.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,92 @@
+name: release-please
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing release tag to publish (e.g. v1.3.3)"
+        required: true
+
+concurrency:
+  group: release-please
+  cancel-in-progress: true
+
+permissions: {}
+
+env:
+  UV_VERSION: "0.9.4"
+
+jobs:
+  release-please:
+    name: Release Please
+    permissions:
+      contents: write # Required for creating tags and GitHub Releases.
+      pull-requests: write # Required for opening/updating the release PR.
+      issues: write # Required for release-please issue/PR annotations.
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      release_tag: ${{ steps.release.outputs.tag_name }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run release-please
+        id: release
+        uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          config-file: .release-please-config.json
+          manifest-file: .release-please-manifest.json
+          target-branch: main
+
+  build:
+    name: Build
+    permissions:
+      contents: read
+    needs: release-please
+    if: needs.release-please.outputs.release_created || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout release commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
+        with:
+          ref: ${{ needs.release-please.outputs.release_tag || inputs.tag }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@b75dde52aef63a238519e7aecbbe79a4a52e4315 # v7
+
+      - name: Install dependencies
+        run: uv sync --all-groups
+
+      - name: Build package
+        run: uv build
+
+      - name: Store the distribution packages
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: python-package-distributions
+          path: dist/
+
+  publish-pypi:
+    name: Publish to PyPI
+    needs:
+      - build
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write # Required for PyPI trusted publishing via OIDC.
+    steps:
+      - name: Download all the dists
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: python-package-distributions
+          path: dist/
+      - name: Publish distribution to PyPI
+        uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
+        with:
+          verbose: true
+          skip-existing: true
