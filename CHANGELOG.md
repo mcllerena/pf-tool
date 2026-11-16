@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.2](https://github.com/mcllerena/pf-tool/compare/pf-tool-v0.2.1...pf-tool-v0.2.2) (2026-11-16)
+
+
+### Bug Fixes
+
+* remove changelog file from being formatted on call ([ca3020f](https://github.com/mcllerena/pf-tool/commit/ca3020f0578694bc791bcef90f2dfd0547f138a7))
+* update codebase for callable package configuration ([c035d1f](https://github.com/mcllerena/pf-tool/commit/c035d1f29d3a43d5ed4cdc250ace42148da2bc09))
+
 ## [0.2.1](https://github.com/mcllerena/pf-tool/compare/pf-tool-v0.2.0...pf-tool-v0.2.1) (2026-11-16)
 
 ### Bug Fixes
