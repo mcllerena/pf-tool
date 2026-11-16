@@ -10,7 +10,12 @@ import pytest
 
 from pf_tool import ExportSolution, NewtonRaphsonPowerFlow, OptimizationPowerFlow
 from pf_tool.models.bus import BusType
-from pf_tool.models.shunt import ShuntStage, SwitchedShunt, adjust_controlled_shunts, snap_to_bank_steps
+from pf_tool.models.shunt import (
+    ShuntStage,
+    SwitchedShunt,
+    adjust_controlled_shunts,
+    snap_to_bank_steps,
+)
 from pf_tool.utils.dat_parser import parse_dat_file, parse_dat_text
 from pf_tool.utils.utils import build_power_flow_case
 

@@ -73,8 +73,10 @@ def test_print_iterations_reports_every_pass(solved: tuple[NewtonRaphsonPowerFlo
     solver, output = solved
     assert output.startswith(f"Newton-Raphson power flow: {CASE.name}")
     assert "controls are stable" in output
-    assert output.rstrip().splitlines()[-1].startswith(
-        f"Converged in {solver.result.iterations} iterations"
+    assert (
+        output.rstrip()
+        .splitlines()[-1]
+        .startswith(f"Converged in {solver.result.iterations} iterations")
     )
     if solver.control_method == "simultaneous":
         assert "generators at a reactive limit" in output
@@ -143,9 +145,7 @@ def test_optimization_rejects_invalid_options(
 
 
 @pytest.mark.skipif(not _ipopt_available(), reason="Ipopt is not installed")
-def test_optimization_warm_start_matches_newton(
-    stored_voltage: np.ndarray, tmp_path: Path
-) -> None:
+def test_optimization_warm_start_matches_newton(stored_voltage: np.ndarray, tmp_path: Path) -> None:
     solver = OptimizationPowerFlow(filename=CASE, warm_start=True)
     result = solver.solve()
 
