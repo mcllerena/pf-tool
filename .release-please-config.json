@@ -3,7 +3,14 @@
   "packages": {
     ".": {
       "release-type": "python",
-      "package-name": "pf-tool"
+      "package-name": "pf-tool",
+      "extra-files": [
+        {
+          "type": "toml",
+          "path": "uv.lock",
+          "jsonpath": "$.package[?(@.name=='pf-tool')].version"
+        }
+      ]
     }
   }
 }
