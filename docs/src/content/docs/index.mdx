@@ -1,0 +1,66 @@
+---
+title: BIPS AC/DC Power Flow
+description: AC/DC power flow for ANAREDE-style .dat cases of the Brazilian Interconnected Power System (BIPS).
+template: splash
+hero:
+  tagline: Solve AC power flows for Brazilian system ANAREDE-style .dat cases (about 12,600 buses each) with a sparse Newton-Raphson solver or an optimization model solved by Ipopt.
+  actions:
+    - text: Getting started
+      link: /getting-started/
+      icon: right-arrow
+    - text: Optimization formulation
+      link: /methods/optimization/
+      icon: open-book
+      variant: minimal
+---
+
+import { Card, CardGrid, LinkCard } from "@astrojs/starlight/components";
+
+## What is inside
+
+<CardGrid>
+  <Card title="Data file" icon="document">
+    AMPL-style `param: BLOCK: columns :=` sections exported from ANAREDE `.pwf` cases. Every block
+    and column used by the solver is documented.
+  </Card>
+  <Card title="Components" icon="puzzle">
+    Buses, generators, lines, transformers with LTC and phase-shifter control, series compensators,
+    shunt banks, SVCs, and HVDC LCC links.
+  </Card>
+  <Card title="Newton-Raphson" icon="rocket">
+    Sparse polar Newton method. Its state includes SVC outputs, LTC taps, and phase-shift angles.
+    Outer passes handle discrete controls.
+  </Card>
+  <Card title="Optimization power flow" icon="setting">
+    A Pyomo nonlinear program solved with Ipopt. It uses signed residuals with per-bus and aggregate
+    bounds and switches SVC operating regions between solves.
+  </Card>
+</CardGrid>
+
+## Benchmark at a glance
+
+All 11 cases in `data/` converge with every method. For each run, the maximum absolute mismatch is below the case tolerance of $10^{-4}$ pu.
+
+| Method                          | Converged | Mean time per case |
+| ------------------------------- | --------: | -----------------: |
+| Newton-Raphson                  |   11 / 11 |              2.8 s |
+| Optimization, Newton warm start |   11 / 11 |             10.2 s |
+| Optimization, cold start        |   11 / 11 |             37.6 s |
+
+<LinkCard
+  title="Results and benchmarks"
+  href="/methods/results/"
+  description="Per-case iterations, solve times, and agreement with the stored ANAREDE solution."
+/>
+
+## Repository layout
+
+| Path                | Contents                                                                                                                              |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `newton_raphson.py` | `NewtonRaphsonPowerFlow` and the shared `PowerFlowResult` / `BusSolution` results                                                     |
+| `optimization.py`   | `OptimizationPowerFlow`, the Pyomo model builder, and the SVC region logic                                                            |
+| `exporter.py`       | `ExportSolution`: Excel workbook with one sheet per component                                                                         |
+| `models/`           | One module per component: `bus`, `branch`, `transformer`, `csc`, `shunt`, `svc`, `hvdc_lcc`, `generator`, `case`, `network_reduction` |
+| `utils/`            | `dat_parser` (block reader), `utils` (case assembly), `network` (Ybus and power calculations)                                         |
+| `examples/`         | Minimal scripts that run each solver class                                                                                            |
+| `data/`             | The eleven `CASO*-FLOW.dat` cases                                                                                                     |

@@ -1,0 +1,13 @@
+references/
+slides/
+
+.venv/
+
+.vscode/
+__pycache__/
+
+docs/node_modules/
+docs/.astro/
+docs/dist/
+# Generated solver outputs (ExportSolution workbooks)
+examples/results/

@@ -1,0 +1,11 @@
+/* KaTeX display equations can be wide: let them scroll instead of overflowing. */
+.katex-display {
+	overflow-x: auto;
+	overflow-y: hidden;
+	padding: 0.25rem 0;
+}
+
+/* Keep wide reference tables readable. */
+.sl-markdown-content table {
+	font-size: 0.875rem;
+}

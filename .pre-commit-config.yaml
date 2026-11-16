@@ -1,0 +1,62 @@
+minimum_prek_version: "0.4.1"
+
+default_stages:
+  - pre-commit
+
+# The ANAREDE cases are multi-megabyte data exports and must never be rewritten.
+exclude: ^data/
+
+repos:
+  - repo: builtin
+    hooks:
+      - id: trailing-whitespace
+        args:
+          - --markdown-linebreak-ext=md
+          - --markdown-linebreak-ext=mdx
+      - id: end-of-file-fixer
+      - id: check-case-conflict
+      - id: check-toml
+      - id: check-yaml
+      - id: check-json
+      - id: mixed-line-ending
+        args: ["--fix=lf"]
+      - id: check-merge-conflict
+      - id: detect-private-key
+      - id: check-added-large-files
+        args: ["--maxkb=1000"]
+      - id: pretty-format-json
+        args: ["--autofix", "--no-sort-keys", "--indent=2"]
+        exclude: (^|/)package-lock\.json$
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.17.5
+    hooks:
+      - id: ruff-check
+        args: ["--fix"]
+      - id: ruff-format
+
+  - repo: local
+    hooks:
+      - id: taplo-format
+        name: taplo format
+        entry: uvx --from taplo==0.9.3 taplo fmt
+        language: system
+        types_or: [toml]
+      - id: taplo-lint
+        name: taplo lint
+        entry: uvx --from taplo==0.9.3 taplo check
+        language: system
+        types_or: [toml]
+      - id: prettier
+        name: prettier
+        entry: prettier --write --ignore-unknown
+        language: node
+        additional_dependencies: ["prettier@3.10.1"]
+        types_or: [markdown, mdx, css, javascript, ts, yaml]
+        exclude: (^|/)package-lock\.json$
+
+  - repo: https://github.com/crate-ci/typos
+    rev: v1.52.2
+    hooks:
+      - id: typos
+        args: ["--force-exclude"]
