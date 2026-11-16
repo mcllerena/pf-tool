@@ -19,7 +19,7 @@ PowerFlowCase (reduced) + base Ybus
   │  island references, tap reconciliation with the stored voltages
   ▼
 Newton-Raphson  ──or──  Optimization (Pyomo + Ipopt, optional Newton warm start)
-  │  inner solve + outer control passes
+  │  simultaneous control equations (Newton) or outer control passes
   ▼
 reduced voltages ── expand ──► original bus voltages, injections, solved taps
 ```
@@ -50,10 +50,10 @@ Very low-impedance links create ill-conditioned Jacobians, so they are contracte
 
 ## 4. Solve
 
-- [Newton-Raphson](/pf-tool/methods/newton-raphson/) solves the mismatch equations together with SVC, LTC, and phase-shifter control equations.
+- [Newton-Raphson](/pf-tool/methods/newton-raphson/) solves the mismatch equations together with SVC, LTC, and phase-shifter control equations. By default it also solves generator reactive limits, switched shunts, voltage-limited buses, and LCC converter reactive power in the same Newton system. Its only extra pass rounds switched shunts to whole bank units.
 - [Optimization power flow](/pf-tool/methods/optimization/) minimizes bounded residuals in a nonlinear program.
 
-Both methods then run **outer control passes** for discrete controls:
+The optimization model, and the Newton-Raphson solver with `control_method="sequential"`, run **outer control passes** for discrete controls instead:
 
 - generator reactive limits;
 - switched shunt banks;

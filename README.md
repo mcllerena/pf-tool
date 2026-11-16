@@ -57,16 +57,31 @@ nlp = OptimizationPowerFlow(
 
 `NewtonRaphsonPowerFlow` does not need Ipopt.
 
-### Solve a case
+### Solve a case with Newton-Raphson AC Power Flow
 
 ```python
 from pf_tool import ExportSolution, NewtonRaphsonPowerFlow
 
-solver = NewtonRaphsonPowerFlow(filename="tests/data/CASO01-FLOW.dat", print_iterations=True)
+solver = NewtonRaphsonPowerFlow(
+    filename="tests/data/CASO01-FLOW.dat", control_method="simultaneous", print_iterations=True
+)
 result = solver.solve()
 
 ExportSolution(solver, output_path="results/CASO01-FLOW-nr.xlsx")
 ```
+
+`control_method` chooses how the controls are solved:
+
+| `control_method`           | How controls are solved                                                                                                                                                                                                                                                                                                              | When to use it                                                                          |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------- |
+| `"simultaneous"` (default) | Generator reactive limits, LTCs, phase shifters, SVCs, switched shunts, and LCC converters are equations of the same Newton system as the network. A generator can reach a reactive limit and come back off it within the iterations. Shunts are solved continuously, rounded to whole bank units, and the case is solved once more. | Fewer iterations, and closer agreement with the ANAREDE solution on the sample cases.   |
+| `"sequential"`             | SVCs, LTCs, and phase shifters are solved in Newton. Generator limits (PV→PQ), switched shunts (one unit per pass), LTC activation, and LCC set-points are updated between full Newton solves until nothing changes.                                                                                                                 | The classic outer-loop approach; slightly faster per case, and useful as a cross-check. |
+
+Both methods converge on all eleven sample cases. See the
+[Newton-Raphson method page](https://mcllerena.github.io/pf-tool/methods/newton-raphson/)
+for the equations, and
+[`examples/compare_control_methods.py`](https://github.com/mcllerena/pf-tool/blob/main/examples/compare_control_methods.py)
+for a side-by-side run.
 
 The eleven sample cases are in
 [`tests/data/`](https://github.com/mcllerena/pf-tool/tree/main/tests/data), and

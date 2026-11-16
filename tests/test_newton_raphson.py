@@ -83,6 +83,79 @@ class NewtonRaphsonTests(unittest.TestCase):
         self.assertEqual(rows[0][6], "2")
         self.assertGreater(abs(float(rows[0][5])), 1.0)
         self.assertTrue(lines[-1].startswith(f"Converged in {result.iterations} iterations"))
+
+    def test_simultaneous_generator_stops_at_its_reactive_limit(self) -> None:
+        # Holding 1.1 pu across x = 0.1 needs about 110 Mvar; the limit is 20.
+        case = PowerFlowCase(
+            base_mva=100.0,
+            buses=[
+                Bus(1, "SLACK", BusType.SLACK, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+                Bus(
+                    2,
+                    "GEN",
+                    BusType.PV,
+                    1.1,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    q_min_mvar=-20.0,
+                    q_max_mvar=20.0,
+                ),
+            ],
+            branches=[Branch(1, 2, 1, 0.0, 0.1, 0.0)],
+        )
+        solver = object.__new__(NewtonRaphsonPowerFlow)
+        solver.case = case
+        solver.tolerance = 1e-9
+        solver.max_iterations = 30
+
+        result = solver.solve()
+
+        self.assertTrue(result.converged, result.failure_reason)
+        self.assertAlmostEqual(result.buses[1].reactive_injection_mvar, 20.0, places=5)
+        self.assertLess(result.buses[1].voltage_pu, 1.1)
+        self.assertEqual(case.buses[1].bus_type, BusType.PQ)
+
+    def test_simultaneous_switched_shunt_ends_on_whole_bank_units(self) -> None:
+        from pf_tool.models.shunt import ShuntStage, SwitchedShunt
+
+        shunt = SwitchedShunt(
+            bus=2,
+            controlled_bus=2,
+            initial_q_mvar=0.0,
+            minimum_q_mvar=0.0,
+            maximum_q_mvar=60.0,
+            minimum_voltage_pu=0.98,
+            maximum_voltage_pu=1.02,
+            fixed=False,
+            current_q_mvar=0.0,
+            stages=[ShuntStage(unit_mvar=10.0, units=6, in_service=0)],
+        )
+        case = PowerFlowCase(
+            base_mva=100.0,
+            buses=[
+                Bus(1, "SLACK", BusType.SLACK, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+                Bus(2, "LOAD", BusType.PQ, 1.0, 0.0, 0.0, 0.0, 50.0, 40.0, 0.0),
+            ],
+            branches=[Branch(1, 2, 1, 0.0, 0.1, 0.0)],
+            switched_shunts=[shunt],
+        )
+        solver = object.__new__(NewtonRaphsonPowerFlow)
+        solver.case = case
+        solver.tolerance = 1e-9
+        solver.max_iterations = 30
+
+        result = solver.solve()
+
+        self.assertTrue(result.converged, result.failure_reason)
+        # The load pulls bus 2 below 0.98 pu, so units are switched in.
+        self.assertGreater(shunt.stages[0].in_service, 0)
+        self.assertAlmostEqual(shunt.current_q_mvar, 10.0 * shunt.stages[0].in_service)
+        self.assertAlmostEqual(case.buses[1].shunt_susceptance_pu, shunt.current_q_mvar / 100.0)
+        self.assertLess(abs(result.buses[1].voltage_pu - 0.98), 0.01)
         for mode in ("P", "I"):
             with self.subTest(mode=mode):
                 case = PowerFlowCase(
@@ -449,27 +522,33 @@ class TransformerControlTests(unittest.TestCase):
     def test_ltc_acts_only_outside_its_voltage_band(self) -> None:
         from pf_tool.models.transformer import build_tap_controls
 
-        branches = [
-            Branch(1, 2, 1, 0.0, 0.05, 0.0),
-            Branch(2, 3, 1, 0.0, 0.1, 0.0, tap_min=0.8, tap_max=1.2, controlled_bus=3),
-        ]
-        case = PowerFlowCase(
-            base_mva=100.0,
-            buses=[
-                Bus(1, "SLACK", BusType.SLACK, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-                Bus(2, "HV", BusType.PQ, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-                Bus(3, "LV", BusType.PQ, 1.0, 0.0, 0.0, 0.0, 80.0, 40.0, 0.0),
-            ],
-            branches=branches,
-            tap_controls=build_tap_controls(branches, [], {1: 1.0, 2: 1.0, 3: 1.0}, 100.0),
-        )
+        # The simultaneous law holds the band edge up to its dead-band slope
+        # times the tap move; the sequential method holds it exactly.
+        for method, delta in (("sequential", 1e-7), ("simultaneous", 1e-4)):
+            with self.subTest(method=method):
+                branches = [
+                    Branch(1, 2, 1, 0.0, 0.05, 0.0),
+                    Branch(2, 3, 1, 0.0, 0.1, 0.0, tap_min=0.8, tap_max=1.2, controlled_bus=3),
+                ]
+                case = PowerFlowCase(
+                    base_mva=100.0,
+                    buses=[
+                        Bus(1, "SLACK", BusType.SLACK, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+                        Bus(2, "HV", BusType.PQ, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+                        Bus(3, "LV", BusType.PQ, 1.0, 0.0, 0.0, 0.0, 80.0, 40.0, 0.0),
+                    ],
+                    branches=branches,
+                    tap_controls=build_tap_controls(branches, [], {1: 1.0, 2: 1.0, 3: 1.0}, 100.0),
+                )
+                solver = self._solver(case)
+                solver.control_method = method
 
-        result = self._solver(case).solve()
+                result = solver.solve()
 
-        self.assertTrue(result.converged, result.failure_reason)
-        # The load drags bus 3 below 0.99 pu, so the LTC holds the band edge.
-        self.assertAlmostEqual(abs(result.voltage[2]), 0.99, places=7)
-        self.assertLess(case.branches[1].tap_ratio, 1.0)
+                self.assertTrue(result.converged, result.failure_reason)
+                # The load drags bus 3 below 0.99 pu, so the LTC holds the band edge.
+                self.assertAlmostEqual(abs(result.voltage[2]), 0.99, delta=delta)
+                self.assertLess(case.branches[1].tap_ratio, 1.0)
 
     def test_phase_shifter_holds_its_scheduled_flow(self) -> None:
         from pf_tool.models.transformer import branch_stamps, build_tap_controls

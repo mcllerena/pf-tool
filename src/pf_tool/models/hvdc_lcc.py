@@ -319,6 +319,51 @@ def update_lcc_from_dc_solution(
     return changed
 
 
+def converter_operating_point(
+    link: HVDCLink, rectifier: bool, ac_voltage_pu: float
+) -> tuple[float, float, float]:
+    """Converter ``(Q Mvar, tap, overlap deg)`` at one AC terminal voltage.
+
+    Uses the same steady-state relations as :func:`update_lcc_from_dc_solution`
+    (scheduled firing/extinction angle, tap holding the DC voltage, overlap
+    from the commutation reactance), iterated to their fixed point instead of
+    one damped step, so the result is a function of the AC voltage alone.
+    """
+    tap = link.tap_rectifier if rectifier else link.tap_inverter
+    overlap = link.mu_rectifier_deg if rectifier else link.mu_inverter_deg
+    stored = link.rectifier_reactive_mvar if rectifier else link.inverter_reactive_mvar
+    if link.p_dc_mw <= 1e-12 or link.vbase_kv <= 10.0:
+        return stored, tap, overlap
+    loss = link.current_ka**2 * max(0.0, link.r_dc_ohm)
+    power = link.p_dc_mw
+    if rectifier and 200.0 <= link.vbase_kv < 750.0:
+        power += loss
+    angle = link.alpha_deg if rectifier else link.gamma_deg
+    dc_voltage = link.vdc_rectifier_kv if rectifier else link.vdc_inverter_kv
+    bridge = link.rectifier_bridge_voltage_kv if rectifier else link.inverter_bridge_voltage_kv
+    poles = link.rectifier_poles if rectifier else link.inverter_poles
+    tap_min = link.tap_rectifier_min if rectifier else link.tap_inverter_min
+    tap_max = link.tap_rectifier_max if rectifier else link.tap_inverter_max
+    for _ in range(100):
+        next_overlap = _overlap_angle(link, rectifier, ac_voltage_pu, tap=tap, previous=overlap)
+        next_tap = _target_tap(
+            link.p_dc_mw,
+            dc_voltage,
+            angle,
+            next_overlap,
+            bridge,
+            poles,
+            ac_voltage_pu,
+            tap_min,
+            tap_max,
+        )
+        settled = abs(next_tap - tap) < 1e-13 and abs(next_overlap - overlap) < 1e-11
+        tap, overlap = next_tap, next_overlap
+        if settled:
+            break
+    return _reactive_power(power, angle, overlap), tap, overlap
+
+
 def _damped(current: float, target: float, damping: float) -> float:
     return (1.0 - damping) * current + damping * target
 
@@ -353,16 +398,25 @@ def _target_tap(
     return _clamp_tap(max(0.0, tap), minimum, maximum)
 
 
-def _overlap_angle(link: HVDCLink, rectifier: bool, ac_voltage_pu: float) -> float:
+def _overlap_angle(
+    link: HVDCLink,
+    rectifier: bool,
+    ac_voltage_pu: float,
+    *,
+    tap: float | None = None,
+    previous: float | None = None,
+) -> float:
     dc_voltage = link.vdc_rectifier_kv if rectifier else link.vdc_inverter_kv
     reactance = link.xcr_percent if rectifier else link.xci_percent
     bridge_voltage = (
         link.rectifier_bridge_voltage_kv if rectifier else link.inverter_bridge_voltage_kv
     )
     nominal_mva = link.rectifier_nominal_mva if rectifier else link.inverter_nominal_mva
-    tap = link.tap_rectifier if rectifier else link.tap_inverter
+    if tap is None:
+        tap = link.tap_rectifier if rectifier else link.tap_inverter
     angle_deg = link.alpha_deg if rectifier else link.gamma_deg
-    previous = link.mu_rectifier_deg if rectifier else link.mu_inverter_deg
+    if previous is None:
+        previous = link.mu_rectifier_deg if rectifier else link.mu_inverter_deg
     if min(dc_voltage, reactance, bridge_voltage, nominal_mva, tap, ac_voltage_pu) <= 1e-12:
         return previous
     transformer_x_ohm = reactance * 0.01 * bridge_voltage**2 / nominal_mva

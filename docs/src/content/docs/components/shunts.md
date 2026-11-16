@@ -37,7 +37,17 @@ The shunt is linear in $|V|^2$. It enters $Y_{bus}$ as $j\,Q/S_{base}$ on the di
 
 ## Discrete voltage control (`DOPC STEP`)
 
-Records with `Ctrl` `D` or `C` regulate the voltage of `Bctrl` inside `[Vmn, Vmx]`. After each converged inner solve, `adjust_controlled_shunts` checks the controlled voltage:
+Records with `Ctrl` `D` or `C` regulate the voltage of `Bctrl` inside `[Vmn, Vmx]`.
+
+With the default **simultaneous** method, each controlled shunt's susceptance change $b$ is a Newton unknown with the law
+
+$$
+\operatorname{mid}\big(b - b^{min},\; b - b^{max},\; d(\kappa\lvert V_c\rvert) + k_b\,b\big) = 0,
+$$
+
+where $d$ is the distance of the controlled voltage outside `[Vmn, Vmx]`, and $[b^{min}, b^{max}]$ is the range spanned by the bank units. Inside the band the shunt keeps its present units. After the first converged solve, every shunt is rounded to the combination of bank units nearest its continuous value; ties go to the fewest switching operations. The case is then solved again with the shunts fixed.
+
+With the **sequential** method, `adjust_controlled_shunts` checks the controlled voltage after each converged inner solve:
 
 1. **Within the band:** it does nothing.
 2. **Below `Vmn`:** it raises the voltage by one unit. It first removes one reactor unit. If no reactor unit is in service, it inserts one capacitor unit.

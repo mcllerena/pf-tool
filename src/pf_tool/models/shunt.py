@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import itertools
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
+
+import numpy as np
 
 if TYPE_CHECKING:
     from pf_tool.models.case import PowerFlowCase
@@ -93,6 +96,49 @@ def _next_switch(shunt: SwitchedShunt, raise_voltage: bool) -> ShuntStage | None
         if stage.unit_mvar * sign > 0.0 and stage.in_service < stage.units:
             return stage
     return None
+
+
+def snap_to_bank_steps(shunt: SwitchedShunt, target_q_mvar: float) -> float:
+    """Switch the bank units whose total is nearest ``target_q_mvar``.
+
+    Updates the stage counts and ``current_q_mvar`` (Mvar at 1 pu) and returns
+    the change, so the caller can update the bus susceptance.
+    """
+    if not shunt.stages:
+        return 0.0
+    choices = [range(stage.units + 1) for stage in shunt.stages]
+    combinations = 1
+    for options in choices:
+        combinations *= len(options)
+    if combinations <= 4096:
+        best = min(
+            itertools.product(*choices),
+            key=lambda counts: (
+                abs(sum(s.unit_mvar * n for s, n in zip(shunt.stages, counts)) - target_q_mvar),
+                sum(abs(n - s.in_service) for s, n in zip(shunt.stages, counts)),
+            ),
+        )
+    else:
+        # Too many combinations: fill the largest units first.
+        remaining = target_q_mvar
+        counts_by_stage: dict[int, int] = {}
+        for index in sorted(
+            range(len(shunt.stages)), key=lambda i: -abs(shunt.stages[i].unit_mvar)
+        ):
+            stage = shunt.stages[index]
+            if abs(stage.unit_mvar) < 1e-12:
+                counts_by_stage[index] = stage.in_service
+                continue
+            count = int(np.clip(round(remaining / stage.unit_mvar), 0, stage.units))
+            counts_by_stage[index] = count
+            remaining -= count * stage.unit_mvar
+        best = tuple(counts_by_stage[i] for i in range(len(shunt.stages)))
+    total = sum(stage.unit_mvar * count for stage, count in zip(shunt.stages, best))
+    for stage, count in zip(shunt.stages, best):
+        stage.in_service = int(count)
+    change = total - shunt.current_q_mvar
+    shunt.current_q_mvar = total
+    return change
 
 
 def adjust_controlled_shunts(case: PowerFlowCase, voltage: object) -> bool:

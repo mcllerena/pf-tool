@@ -28,8 +28,8 @@ import { Card, CardGrid, LinkCard } from "@astrojs/starlight/components";
     shunt banks, SVCs, and HVDC LCC links.
   </Card>
   <Card title="Newton-Raphson" icon="rocket">
-    Sparse polar Newton method. Its state includes SVC outputs, LTC taps, and phase-shift angles.
-    Outer passes handle discrete controls.
+    Sparse polar Newton method. Generator limits, LTCs, phase shifters, SVCs, switched shunts, and
+    LCC converters are solved in the same Newton system as the network.
   </Card>
   <Card title="Optimization power flow" icon="setting">
     A Pyomo nonlinear program solved with Ipopt. It uses signed residuals with per-bus and aggregate
@@ -43,7 +43,7 @@ All 11 cases in `tests/data/` converge with every method. For each run, the maxi
 
 | Method                          | Converged | Mean time per case |
 | ------------------------------- | --------: | -----------------: |
-| Newton-Raphson                  |   11 / 11 |              2.8 s |
+| Newton-Raphson                  |   11 / 11 |              5.0 s |
 | Optimization, Newton warm start |   11 / 11 |             10.2 s |
 | Optimization, cold start        |   11 / 11 |             37.6 s |
 

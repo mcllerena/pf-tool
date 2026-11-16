@@ -26,7 +26,17 @@ For phase shifters, the bounds come from `DCTR.Fmin`/`Fmax` in the `Psh` sign co
 
 ## LTC voltage control with a dead band
 
-ANAREDE treats an LTC as a band controller with tolerance `DCTE TLTC`, which is 0.01 pu in the cases. The Newton solver follows the same logic:
+ANAREDE treats an LTC as a band controller with tolerance `DCTE TLTC`, which is 0.01 pu in the cases. Both control methods follow this logic.
+
+With the default **simultaneous** method, every LTC group is a Newton unknown from the start, with the dead-band law
+
+$$
+\operatorname{mid}\big(s - s^{min},\; s - s^{max},\; \sigma\,d(\kappa_c\lvert V_c\rvert) + k_t\,(s - s_0)\big) = 0,
+$$
+
+where $d$ is the distance of the controlled voltage outside $V^{sp}\pm\text{TLTC}$. Inside the band the tap holds its starting shift $s_0$. Outside it, the tap moves until the voltage is at the band edge, or until the tap reaches a limit. See [Simultaneous control method](/pf-tool/methods/newton-raphson/#simultaneous-control-method). The controlled bus may also be a generator bus with reactive limits, which takes over once that generator reaches a limit.
+
+With the **sequential** method:
 
 1. Every LTC group starts **inactive**: its tap is fixed.
 2. After an inner Newton solve, a group is **activated** when its controlled voltage leaves $V^{sp}\pm\text{TLTC}$. Here $V^{sp}$ is the `DBAR.V` value of the controlled bus.
@@ -41,9 +51,9 @@ In this equation, $\kappa_c$ is the voltage scale of the controlled bus in the r
 
 Weak LTCs regulate the bus on their tap side, where the tap has little effect on that voltage. Without the dead band, they swing their taps across the whole range and distort downstream voltages by up to 0.12 pu. With the band, the solution matches ANAREDE to within 0.01 pu at the 99th percentile.
 
-LTC groups are not activated in three cases:
+LTC groups are not activated (sequential) or not added as unknowns (simultaneous) in these cases:
 
-- the controlled bus is PV or the reference bus;
+- the controlled bus is the reference bus or a PV bus without reactive limits (in the sequential method, any PV bus);
 - the controlled bus is regulated by an SVC;
 - the controlled bus does not exist.
 

@@ -40,7 +40,15 @@ ANAREDE writes blank reactive limits as `Qgn = Qgm = 0`. More than 200 `Tb = 1` 
 
 ### Reactive limit enforcement (`QLIM`)
 
-After each converged inner solve, every PV bus checks the generation needed to hold its voltage:
+With the default **simultaneous** method, every PV bus with reactive limits gets two Newton unknowns: its voltage magnitude and its reactive output change $q_g$. One complementarity equation replaces the voltage condition:
+
+$$
+\operatorname{mid}\big(q_g - q_g^{min},\; q_g - q_g^{max},\; \lvert V_g\rvert - V_g^{sp}\big) = 0 .
+$$
+
+Inside its limits the generator holds $V_g^{sp}$. At a limit it delivers exactly that limit, and its voltage is free. Because this is part of the Newton system, a generator can reach a limit and **come back off it** within the iterations. After the solve, generators at a limit are reported as PQ at that limit. See [Simultaneous control method](/pf-tool/methods/newton-raphson/#simultaneous-control-method).
+
+With the **sequential** method, every PV bus checks the generation needed to hold its voltage after each converged inner solve:
 
 $$
 Q_{g,i}^{req} = Q_i^{calc}\,S_{base} + Q_{l,i} - Q^{svc}_i
@@ -52,6 +60,6 @@ $$
 
 ### Voltage-limited load buses (`VLIM`)
 
-Only buses with `Tb = 3` take part. If such a bus leaves its `DGLT` band, `Vmn`–`Vmx`, by more than 0.001 pu, it becomes a PV bus held at the violated limit.
+Only buses with `Tb = 3` take part. With the simultaneous method, such a bus gets an extra reactive injection $q_i$ with $\operatorname{mid}(\lvert V_i\rvert - V^{min}_i,\; \lvert V_i\rvert - V^{max}_i,\; q_i) = 0$: the injection is zero inside `Vmn`–`Vmx` and holds the voltage at the violated limit otherwise. With the sequential method, a bus that leaves its `DGLT` band by more than 0.001 pu becomes a PV bus held at the violated limit.
 
 Earlier versions applied this rule to every PQ bus. That conflicted with the generator reactive limits and caused PV/PQ cycling, so it is now restricted to the ANAREDE `Tb = 3` buses.

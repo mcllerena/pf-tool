@@ -7,7 +7,7 @@ Source: `pf_tool/models/hvdc_lcc.py`.
 
 The cases contain 17 LCC poles and lines. They include Itaipu (Foz do Iguaçu–Ibiúna), Madeira (Santo Antônio–Araraquara), the Porto Velho back-to-back converter, Belo Monte (Xingu–Estreito and Xingu–Terminal Rio), and the Alumar links.
 
-The DC network is not part of the AC Newton state. Each link becomes active and reactive **injections at its two AC buses**. These injections are recomputed from the AC solution in the outer control passes.
+The DC network is not part of the AC Newton state. Each link becomes active and reactive **injections at its two AC buses**. With the default simultaneous control method, the converter reactive power is a function of the AC terminal voltage inside the Newton system (see [Simultaneous solve](#simultaneous-solve)). With `control_method="sequential"`, the injections are recomputed from the AC solution in the outer control passes.
 
 ## Building a link
 
@@ -46,7 +46,13 @@ Here $a$ is the converter transformer tap (`DCCV.Ttr`), $V_{fs}$ is the secondar
    - the rectifier active and reactive power are added as **load**;
    - the inverter active power is added as **generation**, and its reactive power is added as **load**.
 
-## Updates during the solve
+## Simultaneous solve
+
+`converter_operating_point` evaluates the same relations as the sequential update, but without damping and without changing the link. Starting from the present tap and overlap, it alternates the overlap equation and the tap target until both stop changing, which takes a few iterations. The result is the converter reactive power, tap, and overlap as a **function of the AC terminal voltage** alone.
+
+The Newton residual adds the change of this reactive load at each terminal bus. Its voltage derivative, a central difference with a $10^{-6}$ pu step, is added to the $Q$–$\lvert V\rvert$ diagonal of the Jacobian. Active power does not depend on the AC voltage. After convergence, the solved reactive power, taps, and overlap angles are written back to the links and the bus loads.
+
+## Updates during the solve (sequential method)
 
 After each converged inner solve, `update_lcc_from_dc_solution` performs four updates:
 

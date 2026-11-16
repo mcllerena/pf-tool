@@ -1,7 +1,7 @@
 """Pyomo/Ipopt optimization-based AC power-flow solver.
 
-The power flow is posed as a nonlinear program (following the o-grid
-optimization ACPF): signed P/Q balance residuals are explicit variables,
+The power flow is posed as a nonlinear program:
+signed P/Q balance residuals are explicit variables,
 bounded per bus and in aggregate by the convergence tolerance, and their
 tolerance-normalized squares are minimized together with a light
 regularization towards the initial state.  A feasible point of the NLP is
@@ -648,6 +648,7 @@ class OptimizationPowerFlow:
     ) -> tuple[PowerFlowCase, np.ndarray, csc_matrix] | None:
         warm_case = deepcopy(work_case)
         warm_solver = object.__new__(NewtonRaphsonPowerFlow)
+        warm_solver.control_method = "sequential"
         warm_solver.case = warm_case
         warm_solver.tolerance = self.tolerance
         warm_solver.max_iterations = min(100, self.max_iterations)
