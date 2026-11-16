@@ -14,7 +14,7 @@ Source: `models/bus.py`, `models/generator.py`, and `utils/utils.py`.
 | 2         | Reference (Vθ)         | $\lvert V\rvert$, $\theta$ = `DBAR.V`, `A0` | —                          | —                                              |
 | 3         | PQ with voltage limits | as PQ                                       | as PQ                      | as PQ; becomes PV at a violated limit (`VLIM`) |
 
-The cases contain six `Tb = 2` reference buses. Isolated systems without a reference bus receive one automatically; see [Network reduction](/components/network/).
+The cases contain six `Tb = 2` reference buses. Isolated systems without a reference bus receive one automatically; see [Network reduction](/pf-tool/components/network/).
 
 ## Injections
 
@@ -25,8 +25,8 @@ S_i^{sp} = \frac{(P_{g,i} - P_{l,i}) + j\,(Q_{g,i} - Q_{l,i})}{S_{base}}
 $$
 
 - `Pg`, `Qg`, `Pl`, and `Ql` come from `DBAR`.
-- SVC output is added to `Qg` at its bus; see [SVC](/components/svc/).
-- HVDC converter powers are added to `Pl`/`Ql` at rectifiers and to `Pg`/`Ql` at inverters; see [HVDC LCC](/components/hvdc-lcc/).
+- SVC output is added to `Qg` at its bus; see [SVC](/pf-tool/components/svc/).
+- HVDC converter powers are added to `Pl`/`Ql` at rectifiers and to `Pg`/`Ql` at inverters; see [HVDC LCC](/pf-tool/components/hvdc-lcc/).
 - Loads are **constant power**.
 - The bus shunt `Sh` (Mvar at 1 pu) becomes the susceptance $b^{sh}_i = \text{Sh}/S_{base}$ on the diagonal of $Y_{bus}$. Its injection is therefore $b^{sh}_i\,|V_i|^2$.
 

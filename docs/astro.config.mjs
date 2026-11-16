@@ -7,6 +7,8 @@ import { unified } from "@astrojs/markdown-remark";
 
 // https://astro.build/config
 export default defineConfig({
+	site: "https://mcllerena.github.io",
+	base: "/pf-tool",
 	markdown: {
 		// LaTeX math (`$…$`, `$$…$$`) rendered with KaTeX.
 		processor: unified({ remarkPlugins: [remarkMath], rehypePlugins: [rehypeKatex] }),

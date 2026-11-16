@@ -27,9 +27,9 @@ g^{ctrl}_{\mathcal{C}}(x)
 \end{bmatrix} = 0 .
 $$
 
-- $P^{calc}, Q^{calc}$ come from $Y_{bus}$ ([Lines and transformers](/components/branches/)), which includes the current tap shifts.
-- $g^{svc}$ is the SVC control law or limit equation for its region ([SVC](/components/svc/)).
-- $g^{ctrl}$ is the LTC voltage equation $\kappa_c|V_c| - V_c^{target}$ or the phase-shifter equation $\operatorname{Re}S_{\text{Ext}} - P^{sp}$ ([Tap and phase controls](/components/transformer-controls/)).
+- $P^{calc}, Q^{calc}$ come from $Y_{bus}$ ([Lines and transformers](/pf-tool/components/branches/)), which includes the current tap shifts.
+- $g^{svc}$ is the SVC control law or limit equation for its region ([SVC](/pf-tool/components/svc/)).
+- $g^{ctrl}$ is the LTC voltage equation $\kappa_c|V_c| - V_c^{target}$ or the phase-shifter equation $\operatorname{Re}S_{\text{Ext}} - P^{sp}$ ([Tap and phase controls](/pf-tool/components/transformer-controls/)).
 
 The reference bus angle and magnitude are fixed. PV magnitudes are fixed at `DBAR.V`.
 

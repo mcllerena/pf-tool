@@ -46,12 +46,12 @@ The component pages explain how each block contributes to the network and inject
 
 ## 3. Network reduction
 
-Very low-impedance links create ill-conditioned Jacobians, so they are contracted. These links include bus-section switches, bypassed series compensators, and ideal ties. Each island receives a reference bus. Transformer taps that contradict the stored operating point are corrected. See [Network reduction](/components/network/).
+Very low-impedance links create ill-conditioned Jacobians, so they are contracted. These links include bus-section switches, bypassed series compensators, and ideal ties. Each island receives a reference bus. Transformer taps that contradict the stored operating point are corrected. See [Network reduction](/pf-tool/components/network/).
 
 ## 4. Solve
 
-- [Newton-Raphson](/methods/newton-raphson/) solves the mismatch equations together with SVC, LTC, and phase-shifter control equations.
-- [Optimization power flow](/methods/optimization/) minimizes bounded residuals in a nonlinear program.
+- [Newton-Raphson](/pf-tool/methods/newton-raphson/) solves the mismatch equations together with SVC, LTC, and phase-shifter control equations.
+- [Optimization power flow](/pf-tool/methods/optimization/) minimizes bounded residuals in a nonlinear program.
 
 Both methods then run **outer control passes** for discrete controls:
 
@@ -73,4 +73,4 @@ The reduced solution is expanded back to every original bus as $V_i = s_i\,V_{\t
 - LCC set-points;
 - bus types.
 
-Reported injections therefore use the final settings. `ExportSolution` writes everything to an Excel workbook; see [Exporting results](/export/).
+Reported injections therefore use the final settings. `ExportSolution` writes everything to an Excel workbook; see [Exporting results](/pf-tool/export/).

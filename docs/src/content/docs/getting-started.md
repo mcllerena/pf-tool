@@ -39,7 +39,7 @@ The same calls are available as `examples/run_nr_powerflow.py` and `examples/run
 
 ## Export the results
 
-Pass the solved solver to `ExportSolution` to write every component result to an Excel workbook, with one sheet per component. See [Exporting results](/export/).
+Pass the solved solver to `ExportSolution` to write every component result to an Excel workbook, with one sheet per component. See [Exporting results](/pf-tool/export/).
 
 ```python
 from exporter import ExportSolution

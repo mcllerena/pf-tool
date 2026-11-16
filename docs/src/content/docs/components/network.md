@@ -37,7 +37,7 @@ The reduced case is built from the contraction matrix $T$, where $T_{i,\text{rep
 - switched-shunt steps, SVC outputs, LCC set-points, and transformer taps and phase shifts go to the original devices;
 - original bus injections and shunt susceptances change by the same amounts.
 
-See [Exporting results](/export/).
+See [Exporting results](/pf-tool/export/).
 
 ## Island references
 
@@ -47,5 +47,5 @@ The solver finds connected components of $Y_{bus}$. Every island without a refer
 
 Both solvers start from the **stored voltages** `DBAR.V` and `A0`, which are ANAREDE's solution.
 
-1. **Tap reconciliation** fixes transformer settings that contradict those voltages; see [Tap and phase controls](/components/transformer-controls/#reconciling-settings-with-the-stored-voltages).
+1. **Tap reconciliation** fixes transformer settings that contradict those voltages; see [Tap and phase controls](/pf-tool/components/transformer-controls/#reconciling-settings-with-the-stored-voltages).
 2. **Newton angle warm start:** before Newton starts, a short active-power-only angle correction may adjust the angles. It runs a few decoupled $P$–$\theta$ Newton steps from both the stored angles and flat angles, and keeps the start with the smaller mismatch.

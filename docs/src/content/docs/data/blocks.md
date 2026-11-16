@@ -19,30 +19,30 @@ The block code follows ANAREDE's naming convention: `D` + an abbreviation of the
 
 ## Block reference
 
-| Block       | ANAREDE name                                   | Meaning                                                                       | Used by the solvers                                                           |
-| ----------- | ---------------------------------------------- | ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| `TITU`      | Título                                         | Case title line                                                               | No                                                                            |
-| `DOPC`      | Dados de Opções de Controle                    | Execution and control options (`QLIM`, `CTAP`, …)                             | Yes: enables controls ([options](/data/options/))                             |
-| `DCTE`      | Dados de Constantes                            | Numerical constants: base MVA, tolerances, and iteration limits               | Yes: `BASE`, `TEPA`, `ACIT`, and `TLTC`                                       |
-| `DBAR`      | Dados de Barras                                | AC buses: type, voltage, angle, generation, load, shunt, and reactive limits  | Yes: [buses](/components/buses/)                                              |
-| `DGBT`      | Dados de Grupos de Base de Tensão              | Base-voltage groups, kV per group code                                        | No; voltages are handled in pu                                                |
-| `DGLT`      | Dados de Grupos de Limites de Tensão           | Operating voltage limits per group code                                       | Yes: bus `Vmin`/`Vmax` for `VLIM`                                             |
-| `DARE`      | Dados de Áreas                                 | Areas and scheduled interchange                                               | No; area interchange control is not modeled                                   |
-| `DGER`      | Dados de Geradores                             | Generator data: active limits and participation factors                       | Partly: active-power limits are stored but do not change the schedule         |
-| `DLIN`      | Dados de Linhas                                | AC circuits: lines and transformers, including LTC data                       | Yes: [lines and transformers](/components/branches/)                          |
-| `DCTR`      | Dados de Controle de Transformadores           | Transformer control data: phase-shifter flow control and voltage bands        | Yes: phase-shifter MW control ([controls](/components/transformer-controls/)) |
-| `DCSC`      | Dados de Compensadores Série Controláveis      | Controllable series compensators: TCSC or fixed series capacitors with bypass | Yes: [series compensators](/components/csc/)                                  |
-| `DBSH`      | Dados de Bancos Shunt                          | Bus and line shunt banks with voltage-control data                            | Yes: [shunt banks](/components/shunts/)                                       |
-| `DBSH_BANK` | Grupos de banco (`FBAN` sub-records of `DBSH`) | Unit groups belonging to a `DBSH` record                                      | Yes: stage sizes and units in service                                         |
-| `DCER`      | Dados de Compensadores Estáticos de Reativos   | Static VAR compensators                                                       | Yes: [SVCs](/components/svc/)                                                 |
-| `DELO`      | Dados de Elos CC                               | HVDC links: base voltage and name                                             | Yes: [HVDC LCC](/components/hvdc-lcc/)                                        |
-| `DCBA`      | Dados de Barras CC                             | DC buses: voltage and link membership                                         | Yes                                                                           |
-| `DCLI`      | Dados de Linhas CC                             | DC lines: resistance                                                          | Yes                                                                           |
-| `DCNV`      | Dados de Conversores CA-CC                     | AC/DC converters: AC and DC buses, mode, and transformer data                 | Yes                                                                           |
-| `DCCV`      | Dados de Controle de Conversores               | Converter controls: power order, firing angle, and taps                       | Yes                                                                           |
-| `DTPF_CIRC` | Circuitos para totalização de fluxo            | Circuit lists for flow summation and monitoring                               | No                                                                            |
+| Block       | ANAREDE name                                   | Meaning                                                                       | Used by the solvers                                                                   |
+| ----------- | ---------------------------------------------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `TITU`      | Título                                         | Case title line                                                               | No                                                                                    |
+| `DOPC`      | Dados de Opções de Controle                    | Execution and control options (`QLIM`, `CTAP`, …)                             | Yes: enables controls ([options](/pf-tool/data/options/))                             |
+| `DCTE`      | Dados de Constantes                            | Numerical constants: base MVA, tolerances, and iteration limits               | Yes: `BASE`, `TEPA`, `ACIT`, and `TLTC`                                               |
+| `DBAR`      | Dados de Barras                                | AC buses: type, voltage, angle, generation, load, shunt, and reactive limits  | Yes: [buses](/pf-tool/components/buses/)                                              |
+| `DGBT`      | Dados de Grupos de Base de Tensão              | Base-voltage groups, kV per group code                                        | No; voltages are handled in pu                                                        |
+| `DGLT`      | Dados de Grupos de Limites de Tensão           | Operating voltage limits per group code                                       | Yes: bus `Vmin`/`Vmax` for `VLIM`                                                     |
+| `DARE`      | Dados de Áreas                                 | Areas and scheduled interchange                                               | No; area interchange control is not modeled                                           |
+| `DGER`      | Dados de Geradores                             | Generator data: active limits and participation factors                       | Partly: active-power limits are stored but do not change the schedule                 |
+| `DLIN`      | Dados de Linhas                                | AC circuits: lines and transformers, including LTC data                       | Yes: [lines and transformers](/pf-tool/components/branches/)                          |
+| `DCTR`      | Dados de Controle de Transformadores           | Transformer control data: phase-shifter flow control and voltage bands        | Yes: phase-shifter MW control ([controls](/pf-tool/components/transformer-controls/)) |
+| `DCSC`      | Dados de Compensadores Série Controláveis      | Controllable series compensators: TCSC or fixed series capacitors with bypass | Yes: [series compensators](/pf-tool/components/csc/)                                  |
+| `DBSH`      | Dados de Bancos Shunt                          | Bus and line shunt banks with voltage-control data                            | Yes: [shunt banks](/pf-tool/components/shunts/)                                       |
+| `DBSH_BANK` | Grupos de banco (`FBAN` sub-records of `DBSH`) | Unit groups belonging to a `DBSH` record                                      | Yes: stage sizes and units in service                                                 |
+| `DCER`      | Dados de Compensadores Estáticos de Reativos   | Static VAR compensators                                                       | Yes: [SVCs](/pf-tool/components/svc/)                                                 |
+| `DELO`      | Dados de Elos CC                               | HVDC links: base voltage and name                                             | Yes: [HVDC LCC](/pf-tool/components/hvdc-lcc/)                                        |
+| `DCBA`      | Dados de Barras CC                             | DC buses: voltage and link membership                                         | Yes                                                                                   |
+| `DCLI`      | Dados de Linhas CC                             | DC lines: resistance                                                          | Yes                                                                                   |
+| `DCNV`      | Dados de Conversores CA-CC                     | AC/DC converters: AC and DC buses, mode, and transformer data                 | Yes                                                                                   |
+| `DCCV`      | Dados de Controle de Conversores               | Converter controls: power order, firing angle, and taps                       | Yes                                                                                   |
+| `DTPF_CIRC` | Circuitos para totalização de fluxo            | Circuit lists for flow summation and monitoring                               | No                                                                                    |
 
-The column meanings are listed in [Block columns](/data/columns/).
+The column meanings are listed in [Block columns](/pf-tool/data/columns/).
 
 ## Case size
 

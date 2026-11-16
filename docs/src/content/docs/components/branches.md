@@ -49,7 +49,7 @@ $$
 Y_{bus} = Y^{base} + \operatorname{diag}(j\,b^{sh}) + \sum_{k\in\text{controlled}} \big(\text{stamps}(a_k,\varphi_k) - \text{stamps}(a_k^0,\varphi_k^0)\big).
 $$
 
-This makes the Newton step's matrix update cheap on the reduced network. A branch with zero impedance cannot be stamped; it must be contracted first. See [Network reduction](/components/network/).
+This makes the Newton step's matrix update cheap on the reduced network. A branch with zero impedance cannot be stamped; it must be contracted first. See [Network reduction](/pf-tool/components/network/).
 
 ## Removed circuits
 
@@ -62,4 +62,4 @@ A `DLIN` record is skipped when any of these conditions applies:
 
 ## Transformer controls
 
-`DLIN` records with $0 < T_{mn} < T_{mx}$ are on-load tap changers that regulate a bus voltage. `DCTR` records with `PCtrl = P` are phase shifters that regulate an active-power flow. Both are described in [Tap and phase controls](/components/transformer-controls/).
+`DLIN` records with $0 < T_{mn} < T_{mx}$ are on-load tap changers that regulate a bus voltage. `DCTR` records with `PCtrl = P` are phase shifters that regulate an active-power flow. Both are described in [Tap and phase controls](/pf-tool/components/transformer-controls/).

@@ -12,7 +12,7 @@ Each in-service `DCSC` record, with `O = "A"` and `E ≠ "D"`, is its **own circ
 | Condition                                        | Branch added                                                                                          |
 | ------------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
 | `Byp = "D"`: bypass open, compensator in service | $r = 0$, $x = X_v/100$ pu, with $X_v$ = `Xv` (`Xmin` if blank). Usually negative, meaning capacitive. |
-| `Byp = "L"`: bypass closed                       | Short circuit, $x = 10^{-6}$ pu, contracted by the [network reduction](/components/network/)          |
+| `Byp = "L"`: bypass closed                       | Short circuit, $x = 10^{-6}$ pu, contracted by the [network reduction](/pf-tool/components/network/)  |
 | A `DLIN` circuit with the same `I–J–Nc` exists   | The compensator reactance is added to that circuit in series                                          |
 
 The stored voltages confirm the bypass interpretation: both terminals of a bypassed compensator have identical voltage and angle.

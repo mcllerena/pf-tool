@@ -33,7 +33,7 @@ $$
 
 The installed range is $[\sum_g \min(0, \text{Sht}_g U_g),\; \sum_g \max(0, \text{Sht}_g U_g)]$. A record without groups becomes one stage of size `Qini`.
 
-The shunt is linear in $|V|^2$. It enters $Y_{bus}$ as $j\,Q/S_{base}$ on the diagonal, scaled by $|s_i|^2$ when the bus was merged by the [network reduction](/components/network/).
+The shunt is linear in $|V|^2$. It enters $Y_{bus}$ as $j\,Q/S_{base}$ on the diagonal, scaled by $|s_i|^2 when the bus was merged by the [network reduction](/pf-tool/components/network/).
 
 ## Discrete voltage control (`DOPC STEP`)
 

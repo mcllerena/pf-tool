@@ -58,11 +58,11 @@ Each sheet has a bold, frozen header row. Powers are in MW and Mvar, voltages in
 
 ## How the values are obtained
 
-The solvers work on the [reduced network](/components/network/). After solving, `ReducedCase.write_back` copies every solved control back to the **original** case. That covers bus types, switched-shunt steps, SVC outputs, LCC set-points, and transformer taps and phase shifts. The exporter then works on the original buses and branches with the expanded voltages.
+The solvers work on the [reduced network](/pf-tool/components/network/). After solving, `ReducedCase.write_back` copies every solved control back to the **original** case. That covers bus types, switched-shunt steps, SVC outputs, LCC set-points, and transformer taps and phase shifts. The exporter then works on the original buses and branches with the expanded voltages.
 
 **Branch flows.** For every branch that was not contracted, the exporter uses the π-model terminal powers $S_f$ and $S_t$ with the final tap and phase.
 
-**Collapsed links.** These are switches, bypassed CSCs, and other branches at or below the [zero impedance threshold](/components/network/#zero-impedance-threshold). They cannot be evaluated from voltages, because both ends are the same electrical node. In each reduced node, the exporter solves the series flows from Kirchhoff's current law at the member buses:
+**Collapsed links.** These are switches, bypassed CSCs, and other branches at or below the [zero impedance threshold](/pf-tool/components/network/#zero-impedance-threshold). They cannot be evaluated from voltages, because both ends are the same electrical node. In each reduced node, the exporter solves the series flows from Kirchhoff's current law at the member buses:
 
 $$
 \sum_{k\,\text{collapsed}} A_{mk}\,f_k = S^{local}_m - S^{shunt}_m - \sum_{k\,\text{not collapsed}} S_{m,k} - \sum_{k\,\text{collapsed}} S^{charging}_{m,k}
