@@ -22,10 +22,10 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
-from models.branch import Branch
+from pf_tool.models.branch import Branch
 
 if TYPE_CHECKING:
-    from models.case import PowerFlowCase
+    from pf_tool.models.case import PowerFlowCase
 
 
 @dataclass(slots=True)
@@ -291,8 +291,8 @@ def reconcile_tap_controls(case: PowerFlowCase, voltage: np.ndarray, sweeps: int
     mismatches across low-impedance transformers).  A correction is only
     applied when it removes most of a significant terminal mismatch.
     """
-    from models.bus import BusType
-    from utils.network import build_ybus, calculate_power
+    from pf_tool.models.bus import BusType
+    from pf_tool.utils.network import build_ybus, calculate_power
 
     if not case.tap_controls:
         return False

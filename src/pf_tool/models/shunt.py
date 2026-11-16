@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from models.case import PowerFlowCase
+    from pf_tool.models.case import PowerFlowCase
 
 
 @dataclass(slots=True)

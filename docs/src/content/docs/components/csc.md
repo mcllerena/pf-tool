@@ -3,7 +3,7 @@ title: Series compensators (CSC)
 description: DCSC records as standalone series circuits, including bypassed compensators.
 ---
 
-Source: `models/csc.py`.
+Source: `pf_tool/models/csc.py`.
 
 ## Model
 

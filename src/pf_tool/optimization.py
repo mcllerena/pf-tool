@@ -33,21 +33,21 @@ from pyomo.opt import SolverFactory, TerminationCondition
 from scipy.sparse import csc_matrix
 from scipy.sparse.csgraph import connected_components
 
-from models.bus import BusType
-from models.case import PowerFlowCase
-from models.hvdc_lcc import update_lcc_from_dc_solution
-from models.network_reduction import reduce_low_impedance_branches
-from models.shunt import adjust_controlled_shunts
-from models.svc import active_svc_states, refresh_svc_limits
-from models.transformer import reconcile_tap_controls
-from newton_raphson import (
+from pf_tool.models.bus import BusType
+from pf_tool.models.case import PowerFlowCase
+from pf_tool.models.hvdc_lcc import update_lcc_from_dc_solution
+from pf_tool.models.network_reduction import reduce_low_impedance_branches
+from pf_tool.models.shunt import adjust_controlled_shunts
+from pf_tool.models.svc import active_svc_states, refresh_svc_limits
+from pf_tool.models.transformer import reconcile_tap_controls
+from pf_tool.newton_raphson import (
     BusSolution,
     NewtonRaphsonPowerFlow,
     PowerFlowResult,
 )
-from utils.dat_parser import parse_dat_file
-from utils.network import build_ybus, calculate_power, freeze_branch_matrix
-from utils.utils import build_power_flow_case
+from pf_tool.utils.dat_parser import parse_dat_file
+from pf_tool.utils.network import build_ybus, calculate_power, freeze_branch_matrix
+from pf_tool.utils.utils import build_power_flow_case
 
 _IPOPT_ACCEPTED_TERMINATIONS = {
     TerminationCondition.optimal,
@@ -458,12 +458,21 @@ def solve_optimization_model(
     max_iterations: int = 200,
     max_cpu_time: float = 900.0,
     print_iterations: bool = False,
+    ipopt_executable: str | Path | None = None,
 ) -> tuple[Any, int | None]:
-    """Solve ``model`` with Ipopt, raising a clear error if it is unavailable."""
-    solver = SolverFactory("ipopt")
+    """Solve ``model`` with Ipopt, raising a clear error if it is unavailable.
+
+    ``ipopt_executable`` is the path to the Ipopt binary; ``None`` searches ``PATH``.
+    """
+    if ipopt_executable is None:
+        solver = SolverFactory("ipopt")
+    else:
+        solver = SolverFactory("ipopt", executable=str(ipopt_executable))
     if solver is None or not solver.available(exception_flag=False):
+        location = f"at {ipopt_executable}" if ipopt_executable is not None else "on PATH"
         raise RuntimeError(
-            "Ipopt is not available. Install an Ipopt executable and ensure it is on PATH."
+            f"Ipopt is not available {location}. Install Ipopt and add it to PATH, "
+            "or pass ipopt_executable='path/to/ipopt'."
         )
     solver.options["max_iter"] = int(max_iterations)
     solver.options["max_cpu_time"] = float(max_cpu_time)
@@ -585,11 +594,14 @@ class OptimizationPowerFlow:
     shunt steps, LTC taps, phase shifts, SVC outputs, LCC set-points).  With
     ``warm_start=False`` the NLP starts from the voltages stored in the case,
     after reconciling transformer settings with them.
+
+    Ipopt is looked up on ``PATH`` unless ``ipopt_executable`` gives the path to
+    the binary.
     """
 
     def __init__(
         self,
-        data_file: str | Path | None = None,
+        data_file: str | Path,
         *,
         tolerance: float | None = None,
         max_iterations: int | None = None,
@@ -597,12 +609,9 @@ class OptimizationPowerFlow:
         max_control_passes: int = 20,
         warm_start: bool = True,
         print_iterations: bool = False,
+        ipopt_executable: str | Path | None = None,
     ) -> None:
-        self.data_file = (
-            Path(data_file)
-            if data_file is not None
-            else Path(__file__).resolve().parent / "data" / "CASO01-FLOW.dat"
-        )
+        self.data_file = Path(data_file)
         tables = parse_dat_file(self.data_file)
         self.case = build_power_flow_case(tables)
         constants = {
@@ -626,6 +635,7 @@ class OptimizationPowerFlow:
         self.max_control_passes = int(max_control_passes)
         self.warm_start = bool(warm_start)
         self.print_iterations = bool(print_iterations)
+        self.ipopt_executable = ipopt_executable
         self.tap_voltage_band = float(constants.get("TLTC", 0.01))
         self.warm_start_iterations = 0
         self.warm_start_converged = False
@@ -693,6 +703,7 @@ class OptimizationPowerFlow:
                 max_iterations=self.max_iterations,
                 max_cpu_time=self.max_cpu_time,
                 print_iterations=self.print_iterations,
+                ipopt_executable=self.ipopt_executable,
             )
             self.nlp_solves += 1
             ipopt_iterations += iterations or 0

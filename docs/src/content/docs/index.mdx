@@ -39,7 +39,7 @@ import { Card, CardGrid, LinkCard } from "@astrojs/starlight/components";
 
 ## Benchmark at a glance
 
-All 11 cases in `data/` converge with every method. For each run, the maximum absolute mismatch is below the case tolerance of $10^{-4}$ pu.
+All 11 cases in `tests/data/` converge with every method. For each run, the maximum absolute mismatch is below the case tolerance of $10^{-4}$ pu.
 
 | Method                          | Converged | Mean time per case |
 | ------------------------------- | --------: | -----------------: |
@@ -53,14 +53,16 @@ All 11 cases in `data/` converge with every method. For each run, the maximum ab
   description="Per-case iterations, solve times, and agreement with the stored ANAREDE solution."
 />
 
-## Repository layout
+## Package layout
 
-| Path                | Contents                                                                                                                              |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `newton_raphson.py` | `NewtonRaphsonPowerFlow` and the shared `PowerFlowResult` / `BusSolution` results                                                     |
-| `optimization.py`   | `OptimizationPowerFlow`, the Pyomo model builder, and the SVC region logic                                                            |
-| `exporter.py`       | `ExportSolution`: Excel workbook with one sheet per component                                                                         |
-| `models/`           | One module per component: `bus`, `branch`, `transformer`, `csc`, `shunt`, `svc`, `hvdc_lcc`, `generator`, `case`, `network_reduction` |
-| `utils/`            | `dat_parser` (block reader), `utils` (case assembly), `network` (Ybus and power calculations)                                         |
-| `examples/`         | Minimal scripts that run each solver class                                                                                            |
-| `data/`             | The eleven `CASO*-FLOW.dat` cases                                                                                                     |
+Install with `pip install pf-tool`, then import from `pf_tool`. The main classes are also exported at the top level: `from pf_tool import NewtonRaphsonPowerFlow, OptimizationPowerFlow, ExportSolution`.
+
+| Path                        | Contents                                                                                                                              |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `pf_tool/newton_raphson.py` | `NewtonRaphsonPowerFlow` and the shared `PowerFlowResult` / `BusSolution` results                                                     |
+| `pf_tool/optimization.py`   | `OptimizationPowerFlow`, the Pyomo model builder, and the SVC region logic                                                            |
+| `pf_tool/exporter.py`       | `ExportSolution`: Excel workbook with one sheet per component                                                                         |
+| `pf_tool/models/`           | One module per component: `bus`, `branch`, `transformer`, `csc`, `shunt`, `svc`, `hvdc_lcc`, `generator`, `case`, `network_reduction` |
+| `pf_tool/utils/`            | `dat_parser` (block reader), `utils` (case assembly), `network` (Ybus and power calculations)                                         |
+
+In the repository, the package lives under `src/`, the eleven `CASO*-FLOW.dat` cases under `tests/data/`, and minimal scripts that run each solver class under `examples/`.

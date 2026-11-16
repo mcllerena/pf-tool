@@ -3,7 +3,7 @@ title: Network reduction
 description: Zero impedance threshold, island reference assignment, and the reduced case.
 ---
 
-Source: `models/network_reduction.py`, `utils/network.py`, and `newton_raphson.py`.
+Source: `pf_tool/models/network_reduction.py`, `pf_tool/utils/network.py`, and `pf_tool/newton_raphson.py`.
 
 ## Zero impedance threshold
 

@@ -6,11 +6,11 @@ from pathlib import Path
 
 from openpyxl import load_workbook
 
-from exporter import SHEET_HEADERS, ExportSolution
-from models.branch import Branch
-from models.bus import Bus, BusType
-from models.case import PowerFlowCase
-from newton_raphson import NewtonRaphsonPowerFlow
+from pf_tool.exporter import SHEET_HEADERS, ExportSolution
+from pf_tool.models.branch import Branch
+from pf_tool.models.bus import Bus, BusType
+from pf_tool.models.case import PowerFlowCase
+from pf_tool.newton_raphson import NewtonRaphsonPowerFlow
 
 
 class ExportSolutionTests(unittest.TestCase):

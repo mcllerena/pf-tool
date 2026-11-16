@@ -3,17 +3,16 @@ title: Exporting results
 description: ExportSolution writes every solved component to an Excel workbook, one sheet per component.
 ---
 
-Source: `exporter.py` (`ExportSolution`).
+Source: `pf_tool/exporter.py` (`ExportSolution`).
 
 ## Usage
 
 Solve the case, then pass the solver to `ExportSolution`:
 
 ```python
-from exporter import ExportSolution
-from newton_raphson import NewtonRaphsonPowerFlow
+from pf_tool import ExportSolution, NewtonRaphsonPowerFlow
 
-solver = NewtonRaphsonPowerFlow("data/CASO01-FLOW.dat")
+solver = NewtonRaphsonPowerFlow("tests/data/CASO01-FLOW.dat")
 solver.solve()
 ExportSolution(solver, output_path="results/CASO01-FLOW-nr.xlsx")
 ```

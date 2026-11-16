@@ -13,9 +13,8 @@ build-backend = "setuptools.build_meta"
 [dependency-groups]
 dev = ["prek>=0.2.0", "pytest>=8", "pytest-cov>=5"]
 
-[tool.setuptools]
-packages = ["models", "utils"]
-py-modules = ["exporter", "newton_raphson", "optimization"]
+[tool.setuptools.packages.find]
+where = ["src"]
 
 [tool.ruff]
 line-length = 100
@@ -26,17 +25,15 @@ extend-exclude = ["docs"]
 select = ["E", "F", "I", "UP", "W"]
 
 [tool.ruff.lint.isort]
-known-first-party = [
-  "exporter",
-  "models",
-  "newton_raphson",
-  "optimization",
-  "utils",
-]
+known-first-party = ["pf_tool"]
 
 [tool.typos.files]
-extend-exclude = ["data/", "docs/package-lock.json"]
+extend-exclude = ["tests/data/", "docs/package-lock.json"]
 
 [tool.typos.default.extend-words]
 # "Line-commutated converter" (LCC) is the HVDC term.
 commutated = "commutated"
+# ANAREDE option code and Portuguese block names used in the data-format docs.
+STPO = "STPO"
+Controle = "Controle"
+Circuitos = "Circuitos"

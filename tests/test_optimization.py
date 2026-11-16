@@ -2,16 +2,26 @@ from __future__ import annotations
 
 import unittest
 
-from models.branch import Branch
-from models.bus import Bus, BusType
-from models.case import PowerFlowCase
-from models.svc import SVC
-from optimization import (
+from pf_tool.models.branch import Branch
+from pf_tool.models.bus import Bus, BusType
+from pf_tool.models.case import PowerFlowCase
+from pf_tool.models.svc import SVC
+from pf_tool.optimization import (
     build_optimization_model,
     solution_metrics,
     solve_optimization_model,
     update_svc_regions,
 )
+
+
+class IpoptExecutableTests(unittest.TestCase):
+    def test_missing_executable_path_raises_clear_error(self) -> None:
+        import pyomo.environ as pyo
+
+        with self.assertRaisesRegex(RuntimeError, "no-such-ipopt"):
+            solve_optimization_model(
+                pyo.ConcreteModel(), ipopt_executable="C:/no-such-dir/no-such-ipopt"
+            )
 
 
 class OptimizationPowerFlowTests(unittest.TestCase):

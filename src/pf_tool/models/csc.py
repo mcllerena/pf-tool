@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from models.branch import Branch
+from pf_tool.models.branch import Branch
 
 # Series reactance (pu) used for a bypassed compensator; network reduction
 # contracts it into a single electrical node.

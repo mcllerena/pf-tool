@@ -5,28 +5,28 @@ description: Install the dependencies and run a power flow.
 
 ## Requirements
 
-- Python 3.12 with `numpy`, `scipy`, `pyomo`, and `openpyxl` (see `requirements.txt`).
-- The [Ipopt](https://coin-or.github.io/Ipopt/) executable on `PATH`. This is required only for the optimization power flow. The benchmark used Ipopt 3.12.13.
+- Python 3.12 or newer. Installing the package pulls in `numpy`, `scipy`, `pyomo`, and `openpyxl`.
+- The [Ipopt](https://coin-or.github.io/Ipopt/) executable, either on `PATH` or passed as `OptimizationPowerFlow(..., ipopt_executable="path/to/ipopt")`. This is required only for the optimization power flow. The benchmark used Ipopt 3.12.13.
 
 ```bash
-python -m venv .venv
-.venv\Scripts\activate          # Windows
-pip install -r requirements.txt
+python -m pip install pf-tool
 ```
+
+To work from a clone of the repository instead, run `uv sync` in its root.
 
 ## Run a case
 
-Each solver class takes the path to a `.dat` file. Its `.solve()` method returns a `PowerFlowResult`.
+Each solver class takes the path to a `.dat` file. Its `.solve()` method returns a `PowerFlowResult`. The repository's `tests/data/` folder has eleven sample cases.
 
 ```python
-from newton_raphson import NewtonRaphsonPowerFlow
+from pf_tool import NewtonRaphsonPowerFlow
 
 result = NewtonRaphsonPowerFlow("tests/data/CASO01-FLOW.dat").solve()
 print(result.converged, result.iterations, result.max_mismatch)
 ```
 
 ```python
-from optimization import OptimizationPowerFlow
+from pf_tool import OptimizationPowerFlow
 
 result = OptimizationPowerFlow(
     "tests/data/CASO01-FLOW.dat",
@@ -42,7 +42,7 @@ The same calls are available as `examples/run_nr_powerflow.py` and `examples/run
 Pass the solved solver to `ExportSolution` to write every component result to an Excel workbook, with one sheet per component. See [Exporting results](/pf-tool/export/).
 
 ```python
-from exporter import ExportSolution
+from pf_tool import ExportSolution, NewtonRaphsonPowerFlow
 
 solver = NewtonRaphsonPowerFlow("tests/data/CASO01-FLOW.dat")
 solver.solve()
@@ -51,17 +51,18 @@ ExportSolution(solver, output_path="results/CASO01-FLOW-nr.xlsx")
 
 ## Solver options
 
-| Class                    | Argument             | Default                      | Meaning                                                   |
-| ------------------------ | -------------------- | ---------------------------- | --------------------------------------------------------- |
-| both                     | `data_file`          | `tests/data/CASO01-FLOW.dat` | Case to solve                                             |
-| both                     | `tolerance`          | `TEPA / BASE` from `DCTE`    | Maximum absolute P, Q, and control mismatch, in pu        |
-| `NewtonRaphsonPowerFlow` | `max_iterations`     | `ACIT` from `DCTE`           | Newton iterations per inner solve                         |
-| `NewtonRaphsonPowerFlow` | `max_control_passes` | 50                           | Outer passes for discrete controls                        |
-| `OptimizationPowerFlow`  | `max_iterations`     | `max(200, 2·ACIT)`           | Ipopt iterations per NLP solve                            |
-| `OptimizationPowerFlow`  | `max_cpu_time`       | 900 s                        | Ipopt CPU-time limit per NLP solve                        |
-| `OptimizationPowerFlow`  | `max_control_passes` | 20                           | NLP re-solves for SVC regions and discrete controls       |
-| `OptimizationPowerFlow`  | `warm_start`         | `True`                       | Use a Newton solve as the initial point and control state |
-| `OptimizationPowerFlow`  | `print_iterations`   | `False`                      | Print the Ipopt iteration table                           |
+| Class                    | Argument             | Default                   | Meaning                                                   |
+| ------------------------ | -------------------- | ------------------------- | --------------------------------------------------------- |
+| both                     | `data_file`          | required                  | Case to solve                                             |
+| both                     | `tolerance`          | `TEPA / BASE` from `DCTE` | Maximum absolute P, Q, and control mismatch, in pu        |
+| `NewtonRaphsonPowerFlow` | `max_iterations`     | `ACIT` from `DCTE`        | Newton iterations per inner solve                         |
+| `NewtonRaphsonPowerFlow` | `max_control_passes` | 50                        | Outer passes for discrete controls                        |
+| `OptimizationPowerFlow`  | `max_iterations`     | `max(200, 2·ACIT)`        | Ipopt iterations per NLP solve                            |
+| `OptimizationPowerFlow`  | `max_cpu_time`       | 900 s                     | Ipopt CPU-time limit per NLP solve                        |
+| `OptimizationPowerFlow`  | `max_control_passes` | 20                        | NLP re-solves for SVC regions and discrete controls       |
+| `OptimizationPowerFlow`  | `warm_start`         | `True`                    | Use a Newton solve as the initial point and control state |
+| `OptimizationPowerFlow`  | `print_iterations`   | `False`                   | Print the Ipopt iteration table                           |
+| `OptimizationPowerFlow`  | `ipopt_executable`   | `None` (search `PATH`)    | Path to the Ipopt binary                                  |
 
 ## Result object
 

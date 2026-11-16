@@ -3,7 +3,7 @@ title: Shunt banks
 description: Bus shunts, line shunts, bank stages, and discrete voltage-controlled switching.
 ---
 
-Source: `models/shunt.py` and `utils/utils.py`.
+Source: `pf_tool/models/shunt.py` and `pf_tool/utils/utils.py`.
 
 ## Bus and line shunts
 

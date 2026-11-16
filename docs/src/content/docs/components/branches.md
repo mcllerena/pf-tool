@@ -3,7 +3,7 @@ title: Lines and transformers
 description: π-model branches with off-nominal taps and phase shifts, and how they form Ybus.
 ---
 
-Source: `models/branch.py`, `models/transformer.py` (`branch_from_dlin`), and `utils/network.py` (`build_ybus`).
+Source: `pf_tool/models/branch.py`, `pf_tool/models/transformer.py` (`branch_from_dlin`), and `pf_tool/utils/network.py` (`build_ybus`).
 
 ## Branch model
 

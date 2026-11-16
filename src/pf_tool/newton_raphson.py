@@ -11,20 +11,20 @@ from scipy.sparse import coo_matrix, csc_matrix, diags, hstack, vstack
 from scipy.sparse.csgraph import connected_components
 from scipy.sparse.linalg import MatrixRankWarning, spsolve
 
-from models.bus import BusType
-from models.hvdc_lcc import update_lcc_from_dc_solution
-from models.network_reduction import reduce_low_impedance_branches
-from models.shunt import adjust_controlled_shunts
-from models.svc import (
+from pf_tool.models.bus import BusType
+from pf_tool.models.hvdc_lcc import update_lcc_from_dc_solution
+from pf_tool.models.network_reduction import reduce_low_impedance_branches
+from pf_tool.models.shunt import adjust_controlled_shunts
+from pf_tool.models.svc import (
     SVCState,
     active_svc_states,
     refresh_svc_limits,
     store_svc_outputs,
 )
-from models.transformer import TapControl, branch_sensitivity, reconcile_tap_controls
-from utils.dat_parser import parse_dat_file
-from utils.network import build_ybus, calculate_power, freeze_branch_matrix
-from utils.utils import build_power_flow_case
+from pf_tool.models.transformer import TapControl, branch_sensitivity, reconcile_tap_controls
+from pf_tool.utils.dat_parser import parse_dat_file
+from pf_tool.utils.network import build_ybus, calculate_power, freeze_branch_matrix
+from pf_tool.utils.utils import build_power_flow_case
 
 # Largest tap-ratio / phase-angle (rad) move allowed in one Newton iteration.
 _MAX_TAP_STEP = 0.05
@@ -76,9 +76,8 @@ class _Layout:
 class NewtonRaphsonPowerFlow:
     """Solve an ANAREDE ``.dat`` case using sparse Newton-Raphson iterations.
 
-    The input is the AMPL-style block export used by ``tests/data/*.dat``.  The
-    constructor accepts an alternate case path for other exports in the same
-    format; by default it solves ``tests/data/CASO01-FLOW.dat``.
+    ``data_file`` is an AMPL-style ANAREDE block export, such as the cases in
+    the repository's ``tests/data/`` folder.
 
     Besides bus voltages, the Newton state includes SVC reactive outputs, LTC
     tap shifts (DOPC ``CTAP``) and phase-shifter angles (DOPC ``CPHS``).
@@ -91,17 +90,13 @@ class NewtonRaphsonPowerFlow:
 
     def __init__(
         self,
-        data_file: str | Path | None = None,
+        data_file: str | Path,
         *,
         tolerance: float | None = None,
         max_iterations: int | None = None,
         max_control_passes: int = 50,
     ) -> None:
-        self.data_file = (
-            Path(data_file)
-            if data_file is not None
-            else Path(__file__).resolve().parent / "data" / "CASO01-FLOW.dat"
-        )
+        self.data_file = Path(data_file)
         tables = parse_dat_file(self.data_file)
         self.case = build_power_flow_case(tables)
         constants = {

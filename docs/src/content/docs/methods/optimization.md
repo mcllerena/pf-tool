@@ -3,7 +3,7 @@ title: Optimization power flow
 description: The Pyomo nonlinear program — sets, parameters, variables, expressions, constraints, objective, and solution algorithm.
 ---
 
-Source: `optimization.py` (`build_optimization_model`, `OptimizationPowerFlow`).
+Source: `pf_tool/optimization.py` (`build_optimization_model`, `OptimizationPowerFlow`).
 
 The AC power flow is posed as a **nonlinear program (NLP)**, following the o-grid optimization ACPF paper. Power-balance mismatches are explicit **signed residual variables**. Each residual is bounded by the convergence tolerance at every bus, and their sum is bounded across the system. A feasible point is therefore a converged power flow. The objective drives the residuals toward zero and lightly regularizes the state toward the initial point.
 

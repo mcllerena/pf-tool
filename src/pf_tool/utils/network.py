@@ -5,8 +5,8 @@ from __future__ import annotations
 import numpy as np
 from scipy.sparse import coo_matrix, csc_matrix, diags
 
-from models.case import PowerFlowCase
-from models.transformer import branch_stamps
+from pf_tool.models.case import PowerFlowCase
+from pf_tool.models.transformer import branch_stamps
 
 
 def build_ybus(case: PowerFlowCase) -> csc_matrix:

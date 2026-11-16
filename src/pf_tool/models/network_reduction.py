@@ -7,10 +7,10 @@ from dataclasses import dataclass, replace
 import numpy as np
 from scipy.sparse import coo_matrix, diags
 
-from models.bus import Bus, BusType
-from models.case import PowerFlowCase
-from models.transformer import ControlledBranch, TapControl
-from utils.network import build_ybus
+from pf_tool.models.bus import Bus, BusType
+from pf_tool.models.case import PowerFlowCase
+from pf_tool.models.transformer import ControlledBranch, TapControl
+from pf_tool.utils.network import build_ybus
 
 # Branches with |r + jx| at or below this value (pu) are contracted.
 ZERO_IMPEDANCE_THRESHOLD_PU = 2.000001e-4

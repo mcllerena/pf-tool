@@ -3,7 +3,7 @@ title: Buses and generators
 description: How DBAR buses, generation, loads, and reactive limits are modeled.
 ---
 
-Source: `models/bus.py`, `models/generator.py`, and `utils/utils.py`.
+Source: `pf_tool/models/bus.py`, `pf_tool/models/generator.py`, and `pf_tool/utils/utils.py`.
 
 ## Bus types
 

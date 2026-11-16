@@ -3,7 +3,7 @@ title: Newton-Raphson
 description: Sparse polar Newton-Raphson with SVC, LTC, and phase-shifter states, line search, and outer control passes.
 ---
 
-Source: `newton_raphson.py` (`NewtonRaphsonPowerFlow`).
+Source: `pf_tool/newton_raphson.py` (`NewtonRaphsonPowerFlow`).
 
 ## Unknowns and equations
 

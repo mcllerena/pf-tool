@@ -3,7 +3,7 @@ title: Solution pipeline
 description: What happens between reading a .dat file and returning bus voltages.
 ---
 
-Both solvers follow the same pipeline. Only the numerical core differs.
+Both solvers follow the same pipeline. Only the numerical core differs. Module paths are relative to the `pf_tool` package.
 
 ```text
 .dat file

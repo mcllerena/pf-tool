@@ -4,13 +4,13 @@ import unittest
 
 import numpy as np
 
-from models.branch import Branch
-from models.bus import Bus, BusType
-from models.case import PowerFlowCase
-from models.hvdc_lcc import build_lcc_links, update_lcc_from_dc_solution
-from models.svc import SVC, SVCState, refresh_svc_limits
-from newton_raphson import NewtonRaphsonPowerFlow
-from utils.dat_parser import parse_dat_text
+from pf_tool.models.branch import Branch
+from pf_tool.models.bus import Bus, BusType
+from pf_tool.models.case import PowerFlowCase
+from pf_tool.models.hvdc_lcc import build_lcc_links, update_lcc_from_dc_solution
+from pf_tool.models.svc import SVC, SVCState, refresh_svc_limits
+from pf_tool.newton_raphson import NewtonRaphsonPowerFlow
+from pf_tool.utils.dat_parser import parse_dat_text
 
 
 class DatParserTests(unittest.TestCase):
@@ -363,7 +363,7 @@ def _dat_tables(dbsh: list[dict[str, str]], dcsc: list[dict[str, str]]) -> dict:
 
 class CaseConstructionTests(unittest.TestCase):
     def test_dcsc_records_are_series_branches_or_bypass_shorts(self) -> None:
-        from utils.utils import build_power_flow_case
+        from pf_tool.utils.utils import build_power_flow_case
 
         csc = {"O": "A", "E": "L", "Nc": "1", "Xmin": "-5", "Xmax": "-5", "Cdcsc": "0"}
         case = build_power_flow_case(
@@ -381,7 +381,7 @@ class CaseConstructionTests(unittest.TestCase):
         self.assertLess(abs(reactances[(1, 3)]), 1e-5)
 
     def test_line_shunt_sits_at_its_terminal_and_needs_its_line(self) -> None:
-        from utils.utils import build_power_flow_case
+        from pf_tool.utils.utils import build_power_flow_case
 
         shunt = {
             "O": "A",
@@ -418,7 +418,7 @@ class TransformerControlTests(unittest.TestCase):
         return solver
 
     def test_ltc_acts_only_outside_its_voltage_band(self) -> None:
-        from models.transformer import build_tap_controls
+        from pf_tool.models.transformer import build_tap_controls
 
         branches = [
             Branch(1, 2, 1, 0.0, 0.05, 0.0),
@@ -443,7 +443,7 @@ class TransformerControlTests(unittest.TestCase):
         self.assertLess(case.branches[1].tap_ratio, 1.0)
 
     def test_phase_shifter_holds_its_scheduled_flow(self) -> None:
-        from models.transformer import branch_stamps, build_tap_controls
+        from pf_tool.models.transformer import branch_stamps, build_tap_controls
 
         branches = [
             Branch(1, 2, 1, 0.0, 0.1, 0.0),
@@ -484,7 +484,7 @@ class TransformerControlTests(unittest.TestCase):
         self.assertAlmostEqual(flow.real, 0.2, places=7)
 
     def test_switched_shunt_freezes_instead_of_hunting(self) -> None:
-        from models.shunt import ShuntStage, SwitchedShunt, adjust_controlled_shunts
+        from pf_tool.models.shunt import ShuntStage, SwitchedShunt, adjust_controlled_shunts
 
         case = PowerFlowCase(
             base_mva=100.0,

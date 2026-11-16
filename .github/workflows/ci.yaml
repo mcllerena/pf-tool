@@ -118,4 +118,4 @@ jobs:
           source pkgtest/bin/activate
           python -m pip install --upgrade pip
           python -m pip install dist/*.whl
-          python -c "import exporter, models, newton_raphson, optimization, utils; print('Package imports OK')"
+          python -c "import pf_tool; from pf_tool import ExportSolution, NewtonRaphsonPowerFlow, OptimizationPowerFlow; print('pf_tool', pf_tool.__version__)"

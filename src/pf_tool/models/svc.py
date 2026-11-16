@@ -7,10 +7,10 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
-from models.bus import BusType
+from pf_tool.models.bus import BusType
 
 if TYPE_CHECKING:
-    from models.case import PowerFlowCase
+    from pf_tool.models.case import PowerFlowCase
 
 
 @dataclass(slots=True)

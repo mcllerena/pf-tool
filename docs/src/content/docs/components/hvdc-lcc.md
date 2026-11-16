@@ -3,7 +3,7 @@ title: HVDC LCC links
 description: Line-commutated converter links represented as voltage-dependent AC injections.
 ---
 
-Source: `models/hvdc_lcc.py`.
+Source: `pf_tool/models/hvdc_lcc.py`.
 
 The cases contain 17 LCC poles and lines. They include Itaipu (Foz do Iguaçu–Ibiúna), Madeira (Santo Antônio–Araraquara), the Porto Velho back-to-back converter, Belo Monte (Xingu–Estreito and Xingu–Terminal Rio), and the Alumar links.
 

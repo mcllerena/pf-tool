@@ -3,7 +3,7 @@ title: Tap and phase controls
 description: LTC voltage control (CTAP), phase-shifter flow control (CPHS), and tap reconciliation.
 ---
 
-Source: `models/transformer.py` and `newton_raphson.py`.
+Source: `pf_tool/models/transformer.py` and `pf_tool/newton_raphson.py`.
 
 ## Control groups
 

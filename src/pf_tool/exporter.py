@@ -2,7 +2,9 @@
 
 Usage::
 
-    solver = NewtonRaphsonPowerFlow("tests/data/CASO01-FLOW.dat")
+    from pf_tool import ExportSolution, NewtonRaphsonPowerFlow
+
+    solver = NewtonRaphsonPowerFlow("CASO01-FLOW.dat")
     solver.solve()
     ExportSolution(solver, output_path="results/CASO01.xlsx")
 
@@ -23,12 +25,12 @@ import numpy as np
 from openpyxl import Workbook
 from openpyxl.styles import Font
 
-from models.branch import Branch
-from models.bus import BusType
-from models.case import PowerFlowCase
-from models.network_reduction import ZERO_IMPEDANCE_THRESHOLD_PU, ReducedCase
-from models.transformer import TapControl, branch_stamps
-from utils.network import build_ybus, calculate_power
+from pf_tool.models.branch import Branch
+from pf_tool.models.bus import BusType
+from pf_tool.models.case import PowerFlowCase
+from pf_tool.models.network_reduction import ZERO_IMPEDANCE_THRESHOLD_PU, ReducedCase
+from pf_tool.models.transformer import TapControl, branch_stamps
+from pf_tool.utils.network import build_ybus, calculate_power
 
 _FLOW_HEADERS = (
     "MW:From-To",

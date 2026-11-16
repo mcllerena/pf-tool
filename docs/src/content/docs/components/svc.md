@@ -3,7 +3,7 @@ title: Static VAR compensators
 description: DCER SVCs with reactive-power (P) and current (I) droop control and susceptance limits.
 ---
 
-Source: `models/svc.py`, `newton_raphson.py`, and `optimization.py`.
+Source: `pf_tool/models/svc.py`, `pf_tool/newton_raphson.py`, and `pf_tool/optimization.py`.
 
 ## Data
 

@@ -4,7 +4,7 @@ default_stages:
   - pre-commit
 
 # The ANAREDE cases are multi-megabyte data exports and must never be rewritten.
-exclude: ^data/
+exclude: ^tests/data/
 
 repos:
   - repo: builtin
