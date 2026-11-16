@@ -32,6 +32,7 @@ export default defineConfig({
 				{
 					label: "Data file",
 					items: [
+						{ label: "Parsing BIPS files (PWF and NTW)", slug: "data/parsing-bips" },
 						{ label: "Data blocks", slug: "data/blocks" },
 						{ label: "Block columns", slug: "data/columns" },
 						{ label: "Options and constants", slug: "data/options" },

@@ -57,6 +57,28 @@ nlp = OptimizationPowerFlow(
 
 `NewtonRaphsonPowerFlow` and `FastDecoupledPowerFlow` do not need Ipopt.
 
+### Parsing BIPS files (PWF and NTW)
+
+Convert ANAREDE network (`.ntw`) and power-flow (`.pwf`) files into `.dat`
+files, then pass the returned paths directly to a solver:
+
+```python
+from pf_tool import NewtonRaphsonPowerFlow
+from pf_tool.parser import Ntw2DatParser, Pwf2DatParser
+
+ntw_dat = Ntw2DatParser("tests/data/ntw/9bus.ntw").convert("results/9bus.dat")
+pwf_dat = Pwf2DatParser("tests/data/pwf/d_9nodes.pwf").convert("results/9nodes.dat")
+
+result = NewtonRaphsonPowerFlow(filename=pwf_dat, print_iterations=True).solve()
+print(result.converged)
+```
+
+Use either returned path with `NewtonRaphsonPowerFlow` or
+`FastDecoupledPowerFlow`. `parse()` returns the `.dat` text without writing a
+file. NTW records without a solver-native `.dat` block are retained in `DNTW_*`
+tables. See the [full parsing guide](docs/src/content/docs/data/parsing-bips.md)
+for separate PWF and NTW examples.
+
 ### Solve a case with Newton-Raphson AC Power Flow
 
 ```python
