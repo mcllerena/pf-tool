@@ -14,6 +14,8 @@ The benchmark used these settings:
 | ------------------------------- | --------: | -----------------: | ---------: |
 | Newton-Raphson, simultaneous    |   11 / 11 |              5.0 s |     55.2 s |
 | Newton-Raphson, sequential      |   11 / 11 |              3.7 s |     40.6 s |
+| Fast decoupled, warm start      |   11 / 11 |              5.8 s |     63.9 s |
+| Fast decoupled, cold start      |   11 / 11 |             13.2 s |    145.0 s |
 | Optimization, Newton warm start |   11 / 11 |             10.2 s |    112.5 s |
 | Optimization, cold start        |   11 / 11 |             37.6 s |    413.6 s |
 
@@ -50,6 +52,10 @@ Both Newton-Raphson tables were measured in one run on the same machine, so thei
 | CASO09 | 12607 |       Yes |         15 |           5.9e-07 |      3.4 |        0.764–1.131 |      0.0007 / 0.0101 |
 | CASO10 | 12611 |       Yes |         17 |           6.0e-07 |      3.6 |        0.745–1.267 |      0.0010 / 0.0096 |
 | CASO11 | 12613 |       Yes |         16 |           6.0e-07 |      4.1 |        0.827–1.121 |      0.0007 / 0.0098 |
+
+## Fast decoupled
+
+Per-case tables for both variants (`enhancement=False` and `True`), with warm and cold start, are on the [Fast decoupled](/pf-tool/methods/fast-decoupled/#results) page. All 44 runs converge. The summary rows above use `enhancement=False`.
 
 ## Optimization, Newton warm start
 

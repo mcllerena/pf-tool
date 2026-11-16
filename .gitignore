@@ -18,3 +18,4 @@ results/
 .ruff_cache/
 .coverage
 .coverage.*
+pf_tool.egg-info/

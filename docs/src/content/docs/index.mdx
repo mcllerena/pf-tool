@@ -3,7 +3,7 @@ title: BIPS AC/DC Power Flow
 description: AC/DC power flow for ANAREDE-style .dat cases of the Brazilian Interconnected Power System (BIPS).
 template: splash
 hero:
-  tagline: Solve AC power flows for Brazilian system ANAREDE-style .dat cases (about 12,600 buses each) with a sparse Newton-Raphson solver or an optimization model solved by Ipopt.
+  tagline: Solve AC power flows for Brazilian system ANAREDE-style .dat cases (about 12,600 buses each) with a sparse Newton-Raphson solver, a fast decoupled solver, or an optimization model solved by Ipopt.
   actions:
     - text: Getting started
       link: /pf-tool/getting-started/
@@ -31,6 +31,10 @@ import { Card, CardGrid, LinkCard } from "@astrojs/starlight/components";
     Sparse polar Newton method. Generator limits, LTCs, phase shifters, SVCs, switched shunts, and
     LCC converters are solved in the same Newton system as the network.
   </Card>
+  <Card title="Fast decoupled" icon="random">
+    Decoupled P-θ and Q-V subproblems, with per-iteration Jacobian blocks or constant B'/B''
+    matrices, a coupling correction where decoupling fails, and a Newton-Raphson warm start.
+  </Card>
   <Card title="Optimization power flow" icon="setting">
     A Pyomo nonlinear program solved with Ipopt. It uses signed residuals with per-bus and aggregate
     bounds and switches SVC operating regions between solves.
@@ -44,6 +48,8 @@ All 11 cases in `tests/data/` converge with every method. For each run, the maxi
 | Method                          | Converged | Mean time per case |
 | ------------------------------- | --------: | -----------------: |
 | Newton-Raphson                  |   11 / 11 |              5.0 s |
+| Fast decoupled, warm start      |   11 / 11 |              5.8 s |
+| Fast decoupled, cold start      |   11 / 11 |             13.2 s |
 | Optimization, Newton warm start |   11 / 11 |             10.2 s |
 | Optimization, cold start        |   11 / 11 |             37.6 s |
 
@@ -55,14 +61,15 @@ All 11 cases in `tests/data/` converge with every method. For each run, the maxi
 
 ## Package layout
 
-Install with `pip install pf-tool`, then import from `pf_tool`. The main classes are also exported at the top level: `from pf_tool import NewtonRaphsonPowerFlow, OptimizationPowerFlow, ExportSolution`.
+Install with `pip install pf-tool`, then import from `pf_tool`. The main classes are also exported at the top level: `from pf_tool import NewtonRaphsonPowerFlow, FastDecoupledPowerFlow, OptimizationPowerFlow, ExportSolution`.
 
 | Path                        | Contents                                                                                                                              |
 | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | `pf_tool/newton_raphson.py` | `NewtonRaphsonPowerFlow` and the shared `PowerFlowResult` / `BusSolution` results                                                     |
+| `pf_tool/fast_decoupled.py` | `FastDecoupledPowerFlow`: decoupled Newton and constant B'/B'' fast decoupled power flow                                              |
 | `pf_tool/optimization.py`   | `OptimizationPowerFlow`, the Pyomo model builder, and the SVC region logic                                                            |
 | `pf_tool/exporter.py`       | `ExportSolution`: Excel workbook with one sheet per component                                                                         |
 | `pf_tool/models/`           | One module per component: `bus`, `branch`, `transformer`, `csc`, `shunt`, `svc`, `hvdc_lcc`, `generator`, `case`, `network_reduction` |
 | `pf_tool/utils/`            | `dat_parser` (block reader), `utils` (case assembly), `network` (Ybus and power calculations)                                         |
 
-In the repository, the package lives under `src/`, the eleven `CASO*-FLOW.dat` cases under `tests/data/`, and minimal scripts that run each solver class under `examples/`.
+In the repository, the package lives under `src/`, the eleven `CASO*-FLOW.dat` cases and the IEEE 9-bus test case (`IEEE9-FLOW.dat`) under `tests/data/`, and minimal scripts that run each solver class under `examples/`.

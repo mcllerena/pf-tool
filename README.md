@@ -12,9 +12,9 @@
 </p>
 
 `pf-tool` solves ANAREDE-style `.dat` cases of the BIPS, about 12,600 buses
-each, with a sparse Newton-Raphson solver or an optimization-based AC power
-flow (Pyomo NLP solved with Ipopt), and exports every solved component to an
-Excel workbook.
+each, with a sparse Newton-Raphson solver, a fast decoupled solver, or an
+optimization-based AC power flow (Pyomo NLP solved with Ipopt), and exports
+every solved component to an Excel workbook.
 
 ## Quick Start
 
@@ -55,7 +55,7 @@ nlp = OptimizationPowerFlow(
 ).solve()
 ```
 
-`NewtonRaphsonPowerFlow` does not need Ipopt.
+`NewtonRaphsonPowerFlow` and `FastDecoupledPowerFlow` do not need Ipopt.
 
 ### Solve a case with Newton-Raphson AC Power Flow
 
@@ -83,6 +83,62 @@ for the equations, and
 [`examples/compare_control_methods.py`](https://github.com/mcllerena/pf-tool/blob/main/examples/compare_control_methods.py)
 for a side-by-side run.
 
+### Solve a case with Fast Decoupled AC Power Flow
+
+```python
+from pf_tool import ExportSolution, FastDecoupledPowerFlow
+
+solver = FastDecoupledPowerFlow(
+    filename="tests/data/CASO05-FLOW.dat",
+    enhancement=True,
+    warm_start=True,
+    print_iterations=True,
+)
+result = solver.solve()
+
+ExportSolution(solver, output_path="results/CASO05-FLOW-fd.xlsx")
+```
+
+Sample output:
+
+```text
+Warm start: Newton-Raphson converged in 12 iterations; re-solving with the fast decoupled method
+Fast decoupled power flow (constant B'/B''): CASO05-FLOW.dat
+  Buses: 12578 (11368 after low-impedance reduction)
+  Tolerance: 1.000e-04 pu (0.01 MW/Mvar), up to 100 iterations per control pass
+
+Pass  Iter  Mismatch (pu)   Max dP (MW)   P bus  Max dQ (Mvar)   Q bus   Ctrl (pu)  Max dV (pu)  Max dAng (deg)    Step
+-----------------------------------------------------------------------------------------------------------------------
+   1     0      2.456e-02         0.000    7055         -2.456    1754   5.440e-10            -               -       -
+   1     1      9.397e-03         0.940    1754         -0.026    9605   7.928e-05      0.00159          0.0000  1.0000
+   1     2      2.003e-04         0.020    1715         -0.004    9605   1.435e-05      0.00011          0.0216  1.0000
+   1     3      1.449e-09         0.000    1718          0.000    1715   2.583e-11      0.00001          0.0016  1.0000
+  -- pass 1 converged; updating LTC regulation and re-solving
+   2     0      1.206e-05         0.000    1718          0.000    1715   1.206e-05            -               -       -
+  -- pass 2 converged; controls are stable
+-----------------------------------------------------------------------------------------------------------------------
+Converged in 3 iterations over 2 control passes; max mismatch 1.206e-05 pu (1.206e-03 MW/Mvar)
+```
+
+The fast decoupled method splits each Newton step into an active-power/angle
+(P-θ) half and a reactive-power/voltage (Q-V) half. Mismatches always use the
+full AC equations, so a converged solution is as accurate as Newton-Raphson.
+
+| Argument      | Value             | Behavior                                                                                                                                                                                                                                     |
+| ------------- | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `enhancement` | `False` (default) | Decoupled Newton: the Jacobian blocks `J_Pθ` and `J_QV` are evaluated and factored at every iteration, and both halves are solved from the same point.                                                                                       |
+| `enhancement` | `True`            | Fast decoupled: constant `B'` (series reactances only) and `B''` (`Im(Ybus)`) matrices, factored once and refactored only when bus types or regulating devices change. The P and Q half-iterations alternate.                                |
+| `warm_start`  | `True` (default)  | Solve the case with sequential Newton-Raphson first, then re-solve with the fast decoupled method from that state. Makes the method reliable on cases with series capacitors, very resistive branches, and negative-reactance star branches. |
+| `warm_start`  | `False`           | Start from the voltages stored in the case.                                                                                                                                                                                                  |
+
+LTCs and SVCs are solved in the Q-V half, phase shifters in the P-θ half, and
+generator limits, switched shunts, and LCC set-points are updated between
+passes. When a decoupled iteration does not reduce the mismatch, it is replaced
+by a coupling-corrected step on the full Jacobian. See the
+[fast decoupled method page](https://mcllerena.github.io/pf-tool/methods/fast-decoupled/)
+for the formulation, and
+[`examples/run_fd_powerflow.py`](https://github.com/mcllerena/pf-tool/blob/main/examples/run_fd_powerflow.py).
+
 The eleven sample cases are in
 [`tests/data/`](https://github.com/mcllerena/pf-tool/tree/main/tests/data), and
 runnable scripts are in
@@ -94,7 +150,7 @@ runnable scripts are in
 - [Solution pipeline](https://mcllerena.github.io/pf-tool/pipeline/): parsing, reduction, solve, and write-back.
 - [Data file](https://mcllerena.github.io/pf-tool/data/blocks/): every `.dat` block and column.
 - [Components](https://mcllerena.github.io/pf-tool/components/buses/): how each power-system component is modeled.
-- [Newton-Raphson](https://mcllerena.github.io/pf-tool/methods/newton-raphson/) and [optimization](https://mcllerena.github.io/pf-tool/methods/optimization/): full formulations.
+- [Newton-Raphson](https://mcllerena.github.io/pf-tool/methods/newton-raphson/), [fast decoupled](https://mcllerena.github.io/pf-tool/methods/fast-decoupled/), and [optimization](https://mcllerena.github.io/pf-tool/methods/optimization/): full formulations.
 - [Results and benchmarks](https://mcllerena.github.io/pf-tool/methods/results/): convergence on all eleven cases.
 - [Exporting results](https://mcllerena.github.io/pf-tool/export/): the Excel workbook layout.
 - [Changelog](https://github.com/mcllerena/pf-tool/blob/main/CHANGELOG.md): release history.
@@ -113,6 +169,10 @@ Then run the tests and the formatting and lint hooks:
 uv run pytest
 uv run prek run --all-files
 ```
+
+The tests run on the IEEE 9-bus system in `tests/data/IEEE9-FLOW.dat`, extended
+with every device type in `tests/conftest.py`, so the suite takes a few seconds.
+Coverage must stay at or above 90%.
 
 ## License
 

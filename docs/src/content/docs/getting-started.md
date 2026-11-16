@@ -58,6 +58,16 @@ With the default simultaneous method, pass 1 solves switched shunts as continuou
 | `Step`                | Line-search step length; 1 is a full Newton step, smaller values mean the step was damped |
 
 ```python
+from pf_tool import FastDecoupledPowerFlow
+
+result = FastDecoupledPowerFlow(
+    "tests/data/CASO01-FLOW.dat",
+    enhancement=True,  # constant B'/B'' matrices; False re-evaluates the Jacobian blocks
+    warm_start=True,   # start from a Newton-Raphson solution
+).solve()
+```
+
+```python
 from pf_tool import OptimizationPowerFlow
 
 result = OptimizationPowerFlow(
@@ -67,7 +77,7 @@ result = OptimizationPowerFlow(
 ).solve()
 ```
 
-The same calls are available as `examples/run_nr_powerflow.py` and `examples/run_opt_powerflow.py`. `examples/compare_control_methods.py` solves one case with both Newton-Raphson control methods and prints their iterations, time, and agreement with the stored ANAREDE voltages.
+The same calls are available as `examples/run_nr_powerflow.py`, `examples/run_fd_powerflow.py`, and `examples/run_opt_powerflow.py`. `examples/compare_control_methods.py` solves one case with both Newton-Raphson control methods and prints their iterations, time, and agreement with the stored ANAREDE voltages.
 
 ## Export the results
 
@@ -83,20 +93,23 @@ ExportSolution(solver, output_path="results/CASO01-FLOW-nr.xlsx")
 
 ## Solver options
 
-| Class                    | Argument             | Default                   | Meaning                                                                                                                 |
-| ------------------------ | -------------------- | ------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| both                     | `filename`           | required                  | Case to solve                                                                                                           |
-| both                     | `tolerance`          | `TEPA / BASE` from `DCTE` | Maximum absolute P, Q, and control mismatch, in pu                                                                      |
-| `NewtonRaphsonPowerFlow` | `max_iterations`     | `ACIT` from `DCTE`        | Newton iterations per inner solve                                                                                       |
-| `NewtonRaphsonPowerFlow` | `max_control_passes` | 50                        | Outer passes for discrete controls (sequential method)                                                                  |
-| `NewtonRaphsonPowerFlow` | `control_method`     | `"simultaneous"`          | Solve every control in the Newton system, or `"sequential"` to update generator limits, shunts, and LCCs between solves |
-| `NewtonRaphsonPowerFlow` | `print_iterations`   | `False`                   | Print the per-iteration table shown above                                                                               |
-| `OptimizationPowerFlow`  | `max_iterations`     | `max(200, 2·ACIT)`        | Ipopt iterations per NLP solve                                                                                          |
-| `OptimizationPowerFlow`  | `max_cpu_time`       | 900 s                     | Ipopt CPU-time limit per NLP solve                                                                                      |
-| `OptimizationPowerFlow`  | `max_control_passes` | 20                        | NLP re-solves for SVC regions and discrete controls                                                                     |
-| `OptimizationPowerFlow`  | `warm_start`         | `True`                    | Use a Newton solve as the initial point and control state                                                               |
-| `OptimizationPowerFlow`  | `print_iterations`   | `False`                   | Print the Ipopt iteration table                                                                                         |
-| `OptimizationPowerFlow`  | `ipopt_executable`   | `None` (search `PATH`)    | Path to the Ipopt binary                                                                                                |
+| Class                    | Argument             | Default                     | Meaning                                                                                                                 |
+| ------------------------ | -------------------- | --------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| all                      | `filename`           | required                    | Case to solve                                                                                                           |
+| all                      | `tolerance`          | `TEPA / BASE` from `DCTE`   | Maximum absolute P, Q, and control mismatch, in pu                                                                      |
+| `NewtonRaphsonPowerFlow` | `max_iterations`     | `ACIT` from `DCTE`          | Newton iterations per inner solve                                                                                       |
+| `NewtonRaphsonPowerFlow` | `max_control_passes` | 50                          | Outer passes for discrete controls (sequential method)                                                                  |
+| `NewtonRaphsonPowerFlow` | `control_method`     | `"simultaneous"`            | Solve every control in the Newton system, or `"sequential"` to update generator limits, shunts, and LCCs between solves |
+| `NewtonRaphsonPowerFlow` | `print_iterations`   | `False`                     | Print the per-iteration table shown above                                                                               |
+| `FastDecoupledPowerFlow` | `enhancement`        | `False`                     | `True` uses constant `B'`/`B''` matrices; `False` re-evaluates the decoupled Jacobian blocks each iteration             |
+| `FastDecoupledPowerFlow` | `warm_start`         | `True`                      | Solve with sequential Newton-Raphson first, then re-solve with the fast decoupled method                                |
+| `FastDecoupledPowerFlow` | other arguments      | as `NewtonRaphsonPowerFlow` | `max_iterations`, `max_control_passes`, `print_iterations`; controls always use the sequential method                   |
+| `OptimizationPowerFlow`  | `max_iterations`     | `max(200, 2·ACIT)`          | Ipopt iterations per NLP solve                                                                                          |
+| `OptimizationPowerFlow`  | `max_cpu_time`       | 900 s                       | Ipopt CPU-time limit per NLP solve                                                                                      |
+| `OptimizationPowerFlow`  | `max_control_passes` | 20                          | NLP re-solves for SVC regions and discrete controls                                                                     |
+| `OptimizationPowerFlow`  | `warm_start`         | `True`                      | Use a Newton solve as the initial point and control state                                                               |
+| `OptimizationPowerFlow`  | `print_iterations`   | `False`                     | Print the Ipopt iteration table                                                                                         |
+| `OptimizationPowerFlow`  | `ipopt_executable`   | `None` (search `PATH`)      | Path to the Ipopt binary                                                                                                |
 
 ## Result object
 
