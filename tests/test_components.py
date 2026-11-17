@@ -57,6 +57,21 @@ def test_case_builder_reads_every_block(components_file: Path) -> None:
     assert [link.p_dc_mw for link in case.hvdc_links] == [30.0]
 
 
+def test_model_package_exposes_ybus_queries(components_file: Path) -> None:
+    from pf_tool.models import build_ybus, calculate_power
+    from pf_tool.models.ybus import build_ybus as module_build_ybus
+    from pf_tool.utils.network import build_ybus as legacy_build_ybus
+
+    case = build_power_flow_case(parse_dat_file(components_file))
+    ybus = build_ybus(case)
+    injections = calculate_power(ybus, case.initial_voltage)
+
+    assert build_ybus is module_build_ybus is legacy_build_ybus
+    assert ybus.shape == (len(case.buses), len(case.buses))
+    assert ybus.nnz > 0
+    assert injections.shape == (len(case.buses),)
+
+
 @pytest.mark.parametrize(
     ("text", "message"),
     [

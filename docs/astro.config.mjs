@@ -57,6 +57,7 @@ export default defineConfig({
 						{ label: "Newton-Raphson", slug: "methods/newton-raphson" },
 						{ label: "Levenberg-Marquardt", slug: "methods/levenberg-marquardt" },
 						{ label: "Fast decoupled", slug: "methods/fast-decoupled" },
+						{ label: "Robust AC power flow", slug: "methods/robust" },
 						{ label: "DC power flow", slug: "methods/dc-power-flow" },
 						{ label: "Optimization power flow", slug: "methods/optimization" },
 						{ label: "AC optimal power flow", slug: "methods/acopf" },

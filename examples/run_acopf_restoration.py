@@ -7,10 +7,7 @@ data_file = Path(__file__).resolve().parents[1] / "tests" / "data" / "CASO01-FLO
 output_file = Path(__file__).resolve().parent / "results" / "CASO01-FLOW-acopf-restored.xlsx"
 
 solver = ACOptimalPowerFlow(
-    data_file,
-    feasibility_restoration=True,
-    progressive_tightening=True,
-    print_iterations=True
+    data_file, feasibility_restoration=True, progressive_tightening=True, print_iterations=True
 )
 result = solver.solve()
 
