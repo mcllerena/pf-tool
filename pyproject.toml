@@ -76,3 +76,6 @@ DELT = "DELT"
 YPE = "YPE"
 PARANA = "PARANA"
 PONT = "PONT"
+# Power-system optimization and sensitivity-analysis acronyms.
+OPF = "OPF"
+PTDF = "PTDF"

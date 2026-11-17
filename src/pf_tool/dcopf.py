@@ -119,9 +119,7 @@ class DCOptimalPowerFlow:
 
         balance_matrix = np.zeros((island_count, dispatch_count), dtype=np.float64)
         for generator_index, generator in enumerate(generators):
-            balance_matrix[
-                island_labels[generator.bus_index], generator_index
-            ] = 1.0
+            balance_matrix[island_labels[generator.bus_index], generator_index] = 1.0
         balance_rhs = np.zeros(island_count, dtype=np.float64)
         for island in range(island_count):
             members = np.flatnonzero(island_labels == island)
@@ -132,12 +130,10 @@ class DCOptimalPowerFlow:
                 if island_labels[generator.bus_index] == island
             ]
             minimum_redispatch = sum(
-                generator.minimum_mw - generator.scheduled_mw
-                for generator in island_generators
+                generator.minimum_mw - generator.scheduled_mw for generator in island_generators
             )
             maximum_redispatch = sum(
-                generator.maximum_mw - generator.scheduled_mw
-                for generator in island_generators
+                generator.maximum_mw - generator.scheduled_mw for generator in island_generators
             )
             island_curtailment = sum(
                 item.maximum_mw
@@ -145,22 +141,16 @@ class DCOptimalPowerFlow:
                 if island_labels[item.bus_index] == island
             )
             island_shedding = sum(
-                item.maximum_mw
-                for item in shedable_load
-                if island_labels[item.bus_index] == island
+                item.maximum_mw for item in shedable_load if island_labels[item.bus_index] == island
             )
             minimum_redispatch -= island_curtailment
             maximum_redispatch += island_shedding
             required_redispatch = balance_rhs[island]
             if (
                 required_redispatch
-                < minimum_redispatch
-                - self.balance_slack_limit_mw
-                - _FEASIBILITY_TOLERANCE_MW
+                < minimum_redispatch - self.balance_slack_limit_mw - _FEASIBILITY_TOLERANCE_MW
                 or required_redispatch
-                > maximum_redispatch
-                + self.balance_slack_limit_mw
-                + _FEASIBILITY_TOLERANCE_MW
+                > maximum_redispatch + self.balance_slack_limit_mw + _FEASIBILITY_TOLERANCE_MW
             ):
                 reference = ptdf.reference_buses[island]
                 reason = (
@@ -301,9 +291,7 @@ class DCOptimalPowerFlow:
             ),
             format="csr",
         )
-        inequality_matrix = vstack(
-            (flow_upper, absolute_upper, slack_absolute_upper), format="csr"
-        )
+        inequality_matrix = vstack((flow_upper, absolute_upper, slack_absolute_upper), format="csr")
         inequality_rhs = np.concatenate(
             (
                 line_limits - base_line_flows,
@@ -324,15 +312,18 @@ class DCOptimalPowerFlow:
             format="csr",
         )
         equality_rhs = balance_rhs
-        variable_bounds = [
-            (
-                generator.minimum_mw - generator.scheduled_mw,
-                generator.maximum_mw - generator.scheduled_mw,
-            )
-            for generator in generators
-        ] + [(0.0, None)] * dispatch_count + [
-            (-self.balance_slack_limit_mw, self.balance_slack_limit_mw)
-        ] * island_count + [(0.0, None)] * island_count
+        variable_bounds = (
+            [
+                (
+                    generator.minimum_mw - generator.scheduled_mw,
+                    generator.maximum_mw - generator.scheduled_mw,
+                )
+                for generator in generators
+            ]
+            + [(0.0, None)] * dispatch_count
+            + [(-self.balance_slack_limit_mw, self.balance_slack_limit_mw)] * island_count
+            + [(0.0, None)] * island_count
+        )
         slack_objective = np.concatenate(
             (
                 np.zeros(2 * dispatch_count + island_count, dtype=np.float64),
@@ -372,9 +363,7 @@ class DCOptimalPowerFlow:
                 reason,
             )
 
-        minimum_slack = float(
-            np.sum(slack_optimization.x[2 * dispatch_count + island_count :])
-        )
+        minimum_slack = float(np.sum(slack_optimization.x[2 * dispatch_count + island_count :]))
         slack_objective_row = csr_matrix(
             (
                 np.ones(island_count, dtype=np.float64),
@@ -388,12 +377,8 @@ class DCOptimalPowerFlow:
             ),
             shape=(1, 2 * dispatch_count + 2 * island_count),
         )
-        redispatch_inequality = vstack(
-            (inequality_matrix, slack_objective_row), format="csr"
-        )
-        redispatch_rhs = np.concatenate(
-            (inequality_rhs, [minimum_slack])
-        )
+        redispatch_inequality = vstack((inequality_matrix, slack_objective_row), format="csr")
+        redispatch_rhs = np.concatenate((inequality_rhs, [minimum_slack]))
         optimization = linprog(
             objective,
             A_ub=redispatch_inequality,
@@ -427,13 +412,9 @@ class DCOptimalPowerFlow:
         )
         balance_slack_mw = {
             reference: float(value)
-            for reference, value in zip(
-                ptdf.reference_buses, balance_slack_values, strict=True
-            )
+            for reference, value in zip(ptdf.reference_buses, balance_slack_values, strict=True)
         }
-        generation_mw = {
-            bus.number: float(bus.p_generation_mw) for bus in case.buses
-        }
+        generation_mw = {bus.number: float(bus.p_generation_mw) for bus in case.buses}
         redispatch_mw: dict[int, float] = {}
         for generator, delta in zip(generators, delta_generation, strict=True):
             redispatch_mw[generator.bus_number] = float(delta)
@@ -575,11 +556,7 @@ class DCOptimalPowerFlow:
             ):
                 raise ValueError(f"Active-power maximum is below minimum at bus {bus.number}")
             scheduled = bus.p_generation_mw - lcc_injection_by_bus.get(bus.number, 0.0)
-            if (
-                bus.p_min_mw is None
-                or bus.p_max_mw is None
-                or bus.p_max_mw <= bus.p_min_mw
-            ):
+            if bus.p_min_mw is None or bus.p_max_mw is None or bus.p_max_mw <= bus.p_min_mw:
                 continue
             generators.append(
                 _DispatchGenerator(
@@ -629,10 +606,7 @@ class DCOptimalPowerFlow:
                 maximum_mw=native_load * self.max_load_shedding_fraction,
             )
             for index, bus in enumerate(self.case.buses)
-            if (
-                native_load := bus.p_load_mw - rectifier_power.get(bus.number, 0.0)
-            )
-            > 1e-8
+            if (native_load := bus.p_load_mw - rectifier_power.get(bus.number, 0.0)) > 1e-8
             and self.max_load_shedding_fraction > 0.0
         ]
 
@@ -680,10 +654,7 @@ class DCOptimalPowerFlow:
             dtype=np.int64,
         )
         coefficients = np.asarray(
-            [
-                1.0 / (branch.reactance_pu * branch.tap_ratio)
-                for branch in self.case.branches
-            ],
+            [1.0 / (branch.reactance_pu * branch.tap_ratio) for branch in self.case.branches],
             dtype=np.float64,
         )
         phases = np.asarray(
@@ -696,9 +667,7 @@ class DCOptimalPowerFlow:
         incidence_rows: list[int] = []
         incidence_columns: list[int] = []
         incidence_values: list[float] = []
-        for branch_index, (start, end) in enumerate(
-            zip(from_indices, to_indices, strict=True)
-        ):
+        for branch_index, (start, end) in enumerate(zip(from_indices, to_indices, strict=True)):
             start_position = free_position[start]
             end_position = free_position[end]
             branch_susceptance_mw = coefficients[branch_index] * self.case.base_mva
@@ -775,10 +744,7 @@ class DCOptimalPowerFlow:
             (
                 np.ones(len(curtailable_generation), dtype=np.float64),
                 (
-                    [
-                        ptdf.island_labels[item.bus_index]
-                        for item in curtailable_generation
-                    ],
+                    [ptdf.island_labels[item.bus_index] for item in curtailable_generation],
                     np.arange(len(curtailable_generation)),
                 ),
             ),
@@ -798,9 +764,7 @@ class DCOptimalPowerFlow:
         ).tocsr()
 
         zero_branch_generators = csr_matrix((branch_count, len(generators)))
-        zero_branch_curtailment = csr_matrix(
-            (branch_count, len(curtailable_generation))
-        )
+        zero_branch_curtailment = csr_matrix((branch_count, len(curtailable_generation)))
         zero_branch_load = csr_matrix((branch_count, len(shedable_load)))
         zero_branch_islands = csr_matrix((branch_count, island_count))
         branch_equations = hstack(
@@ -851,9 +815,7 @@ class DCOptimalPowerFlow:
             ),
             format="csr",
         )
-        equality_matrix = vstack(
-            (branch_equations, node_equations, island_equations), format="csr"
-        )
+        equality_matrix = vstack((branch_equations, node_equations, island_equations), format="csr")
         balance_rhs = np.asarray(
             [
                 -float(np.sum(base_net_injection_mw[ptdf.island_labels == island]))
@@ -890,10 +852,7 @@ class DCOptimalPowerFlow:
             + [(0.0, None)] * len(generators)
             + [(0.0, item.maximum_mw) for item in curtailable_generation]
             + [(0.0, item.maximum_mw) for item in shedable_load]
-            + [
-                (-self.balance_slack_limit_mw, self.balance_slack_limit_mw)
-            ]
-            * island_count
+            + [(-self.balance_slack_limit_mw, self.balance_slack_limit_mw)] * island_count
             + [(0.0, None)] * island_count
         )
         absolute_rows: list[int] = []
@@ -961,9 +920,7 @@ class DCOptimalPowerFlow:
             objective = np.zeros(variable_count, dtype=np.float64)
             objective[priority] = 1.0
             if priority_limits:
-                upper_matrix = vstack(
-                    (absolute_constraints, *priority_limits), format="csr"
-                )
+                upper_matrix = vstack((absolute_constraints, *priority_limits), format="csr")
                 upper_rhs = np.concatenate(
                     (absolute_rhs, np.asarray(priority_rhs, dtype=np.float64))
                 )
@@ -1026,15 +983,11 @@ class DCOptimalPowerFlow:
         slack_values = solution[slack_start:slack_abs_start]
         balance_slack_mw = {
             reference: float(value)
-            for reference, value in zip(
-                ptdf.reference_buses, slack_values, strict=True
-            )
+            for reference, value in zip(ptdf.reference_buses, slack_values, strict=True)
         }
         generation_curtailment_mw = {
             item.bus_number: float(value)
-            for item, value in zip(
-                curtailable_generation, curtailment_values, strict=True
-            )
+            for item, value in zip(curtailable_generation, curtailment_values, strict=True)
             if value > _FEASIBILITY_TOLERANCE_MW
         }
         load_shedding_mw = {
@@ -1042,16 +995,12 @@ class DCOptimalPowerFlow:
             for item, value in zip(shedable_load, shedding_values, strict=True)
             if value > _FEASIBILITY_TOLERANCE_MW
         }
-        generation_mw = {
-            bus.number: float(bus.p_generation_mw) for bus in self.case.buses
-        }
+        generation_mw = {bus.number: float(bus.p_generation_mw) for bus in self.case.buses}
         redispatch_mw: dict[int, float] = {}
         for generator, delta in zip(generators, delta_generation, strict=True):
             generation_mw[generator.bus_number] += float(delta)
             redispatch_mw[generator.bus_number] = float(delta)
-        for item, amount in zip(
-            curtailable_generation, curtailment_values, strict=True
-        ):
+        for item, amount in zip(curtailable_generation, curtailment_values, strict=True):
             generation_mw[item.bus_number] -= float(amount)
 
         branch_flow_values = solution[flow_start:generator_start]
@@ -1062,9 +1011,7 @@ class DCOptimalPowerFlow:
                 circuit=branch.circuit,
                 active_power_mw=float(flow),
             )
-            for branch, flow in zip(
-                self.case.branches, branch_flow_values, strict=True
-            )
+            for branch, flow in zip(self.case.branches, branch_flow_values, strict=True)
         ]
         balance_error = self._balance_error(
             base_net_injection_mw,
@@ -1113,9 +1060,7 @@ class DCOptimalPowerFlow:
     ) -> DCOptimalPowerFlowResult:
         """Report whether a fixed-dispatch case already satisfies the DC model."""
         balance_slack_mw = {
-            reference: -float(
-                np.sum(base_net_injection_mw[island_labels == island])
-            )
+            reference: -float(np.sum(base_net_injection_mw[island_labels == island]))
             for island, reference in enumerate(ptdf.reference_buses)
         }
         balance_error = self._balance_error(
@@ -1132,7 +1077,9 @@ class DCOptimalPowerFlow:
             balance_error <= _FEASIBILITY_TOLERANCE_MW
             and branch_violation <= _FEASIBILITY_TOLERANCE_MW
         )
-        reason = None if feasible else "No dispatchable generators are available to restore feasibility"  # noqa: E501
+        reason = (
+            None if feasible else "No dispatchable generators are available to restore feasibility"
+        )  # noqa: E501
         self.result = DCOptimalPowerFlowResult(
             converged=feasible,
             objective_value_mw=0.0 if feasible else None,
@@ -1145,9 +1092,7 @@ class DCOptimalPowerFlow:
             branch_flows=(
                 [
                     DCBranchFlow(branch.from_bus, branch.to_bus, branch.circuit, float(flow))
-                    for branch, flow in zip(
-                        self.case.branches, ptdf.base_flows_mw, strict=True
-                    )
+                    for branch, flow in zip(self.case.branches, ptdf.base_flows_mw, strict=True)
                 ]
                 if feasible
                 else None
@@ -1243,10 +1188,7 @@ class DCOptimalPowerFlow:
         print(f"  Reference buses: {', '.join(map(str, result.reference_buses))}")
         print(f"  LP iterations: {result.iterations}")
         if result.converged and result.objective_value_mw is not None:
-            print(
-                f"  Converged; total absolute redispatch: "
-                f"{result.objective_value_mw:.3f} MW"
-            )
+            print(f"  Converged; total absolute redispatch: {result.objective_value_mw:.3f} MW")
         else:
             print(f"  Did not converge: {result.failure_reason}")
 

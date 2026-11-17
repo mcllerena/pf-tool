@@ -189,7 +189,7 @@ runnable scripts are in
 - [Exporting results](https://mcllerena.github.io/pf-tool/export/): the Excel workbook layout.
 - [Changelog](https://github.com/mcllerena/pf-tool/blob/main/CHANGELOG.md): release history.
 
-### Power-flow methods
+### Static Analysis and Power Flow methods
 
 1. [Newton-Raphson](https://mcllerena.github.io/pf-tool/methods/newton-raphson/): nonlinear AC power flow with simultaneous or sequential controls.
 2. [Levenberg-Marquardt](https://mcllerena.github.io/pf-tool/methods/levenberg-marquardt/): sparse, damped least-squares AC power flow.
@@ -197,6 +197,7 @@ runnable scripts are in
 4. [DC power flow](https://mcllerena.github.io/pf-tool/methods/dc-power-flow/): linear active-power flow using the B-prime matrix.
 5. [Optimization power flow](https://mcllerena.github.io/pf-tool/methods/optimization/): constrained nonlinear optimization solved with Ipopt.
 6. [AC optimal power flow](https://mcllerena.github.io/pf-tool/methods/acopf/): AC power-balance optimization for voltage-profile or loss minimization, with Ipopt duals.
+7. [DC optimal power flow](https://mcllerena.github.io/pf-tool/methods/dcopf/): PTDF-based linear optimization for generator redispatch and load shedding, with branch-flow limits.
 
 ## Development
 

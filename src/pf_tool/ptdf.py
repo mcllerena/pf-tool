@@ -81,8 +81,7 @@ def build_ptdf(
             )
         if not np.isfinite(tap) or tap <= 0.0:
             raise ValueError(
-                f"Invalid tap ratio on branch "
-                f"{branch.from_bus}-{branch.to_bus}-{branch.circuit}"
+                f"Invalid tap ratio on branch {branch.from_bus}-{branch.to_bus}-{branch.circuit}"
             )
         coefficient = 1.0 / (reactance * tap)
         if not np.isfinite(coefficient):

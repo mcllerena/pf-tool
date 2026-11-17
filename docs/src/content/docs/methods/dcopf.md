@@ -4,7 +4,7 @@ description: PTDF-based DC-OPF with least-absolute-redispatch when generator cos
 ---
 
 `DCOptimalPowerFlow` solves a linear DC-OPF using power-transfer distribution
-factors (PTDFs). Its formulation follows the generator bounds, system balance,
+factors, represented by PTDF matrices. Its formulation follows the generator bounds, system balance,
 and transmission limits in Section 3.9 of
 [the referenced lecture notes](https://arxiv.org/abs/1811.00943).
 Unlike AC power flow, this is a linear program, so it has no nonlinear
@@ -158,19 +158,19 @@ the available restoration controls can produce a DC-feasible schedule for all
 eleven cases. This is a feasibility demonstration, not a recommended shedding
 policy. Times include parsing, PTDF construction, and all HiGHS solves.
 
-| Case | Feasible | Time (s) | Load shed (MW) | Fixed-generation curtailment (MW) | Max branch violation (MW) |
-| --- | --- | ---: | ---: | ---: | ---: |
-| CASO01 | Yes | 21.293 | 158.463 | 2139.848 | 0 |
-| CASO02 | Yes | 13.549 | 119.239 | 4008.439 | 0 |
-| CASO03 | Yes | 9.185 | 242.553 | 252.342 | 0 |
-| CASO04 | Yes | 12.902 | 70.639 | 32.387 | 0 |
-| CASO05 | Yes | 10.916 | 72.769 | 7.567 | 0 |
-| CASO06 | Yes | 12.592 | 124.699 | 90.900 | 0 |
-| CASO07 | Yes | 10.944 | 93.373 | 7.667 | 0 |
-| CASO08 | Yes | 8.974 | 196.296 | 575.316 | 0 |
-| CASO09 | Yes | 11.209 | 72.780 | 27.320 | 0 |
-| CASO10 | Yes | 9.193 | 53.406 | 8.367 | 0 |
-| CASO11 | Yes | 10.090 | 80.811 | 10.167 | 0 |
+| Case   | Feasible | Time (s) | Load shed (MW) | Fixed-generation curtailment (MW) | Max branch violation (MW) |
+| ------ | -------- | -------: | -------------: | --------------------------------: | ------------------------: |
+| CASO01 | Yes      |   21.293 |        158.463 |                          2139.848 |                         0 |
+| CASO02 | Yes      |   13.549 |        119.239 |                          4008.439 |                         0 |
+| CASO03 | Yes      |    9.185 |        242.553 |                           252.342 |                         0 |
+| CASO04 | Yes      |   12.902 |         70.639 |                            32.387 |                         0 |
+| CASO05 | Yes      |   10.916 |         72.769 |                             7.567 |                         0 |
+| CASO06 | Yes      |   12.592 |        124.699 |                            90.900 |                         0 |
+| CASO07 | Yes      |   10.944 |         93.373 |                             7.667 |                         0 |
+| CASO08 | Yes      |    8.974 |        196.296 |                           575.316 |                         0 |
+| CASO09 | Yes      |   11.209 |         72.780 |                            27.320 |                         0 |
+| CASO10 | Yes      |    9.193 |         53.406 |                             8.367 |                         0 |
+| CASO11 | Yes      |   10.090 |         80.811 |                            10.167 |                         0 |
 
 These are not AC-style convergence failures: the primary PTDF LP lacks enough
 controls to relieve the base overloads, and the restoration LP is bounded by

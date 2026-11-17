@@ -138,9 +138,7 @@ def test_dcopf_uses_least_redispatch_to_enforce_ptdf_line_limits(tmp_path: Path)
     assert curtailed["bus_number"].tolist() == [1]
     assert curtailed.iloc[0]["bus_name"] == "GEN-1"
     assert tuple(
-        curtailed.iloc[0][
-            ["generation_before_mw", "generation_after_mw", "curtailed_mw"]
-        ]
+        curtailed.iloc[0][["generation_before_mw", "generation_after_mw", "curtailed_mw"]]
     ) == pytest.approx((80.0, 70.0, 10.0))
     assert [flow.active_power_mw for flow in result.branch_flows or []] == pytest.approx(
         [70.0, 30.0], abs=1e-6
@@ -216,9 +214,7 @@ def test_dcopf_rejects_negative_balance_slack_limit(tmp_path: Path) -> None:
 def test_dcopf_uses_load_shedding_for_fixed_generator_insensitive_overload(
     tmp_path: Path,
 ) -> None:
-    solver = DCOptimalPowerFlow(
-        _uncontrollable_overload_case(tmp_path / "fixed_overload.dat")
-    )
+    solver = DCOptimalPowerFlow(_uncontrollable_overload_case(tmp_path / "fixed_overload.dat"))
     result = solver.solve()
 
     assert result.converged, result.failure_reason
@@ -229,9 +225,7 @@ def test_dcopf_uses_load_shedding_for_fixed_generator_insensitive_overload(
     curtailed = solver.get_curtailed_generators()
     assert curtailed["bus_number"].tolist() == [1]
     assert tuple(
-        curtailed.iloc[0][
-            ["generation_before_mw", "generation_after_mw", "curtailed_mw"]
-        ]
+        curtailed.iloc[0][["generation_before_mw", "generation_after_mw", "curtailed_mw"]]
     ) == pytest.approx((50.0, 40.0, 10.0))
     shed = solver.get_shed_loads()
     assert shed["bus_number"].tolist() == [2]
