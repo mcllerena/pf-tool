@@ -99,6 +99,27 @@ With `sparsity=True`, the solver requests SuperLU's `MMD_AT_PLUS_A` minimum-degr
 
 `sparsity` and `lu_decomposition` are independent and can be combined either way. `lu_decomposition=False` (default) uses SciPy's `spsolve`; `True` uses an explicit `splu` factorization and solve. In both cases the selected ordering is applied, and the Newton equations and iteration strategy are unchanged. The LU option follows the notes' factor-and-substitute workflow without forming $J^{-1}$ or coding a dense Crout/Doolittle algorithm. Since the Jacobian values change at each operating point, Newton refactors it for each step. `DCPowerFlow` factors its reduced B-prime matrix once per solve, while the enhanced fast-decoupled method reuses its constant B-prime/B-double-prime factors until the network structure changes.
 
+Set `linear_solver="clu"` to use VeraGridEngine's optional sparse CLU factorizer:
+
+```python
+solver = NewtonRaphsonPowerFlow(
+    "CASE-FLOW.dat",
+    linear_solver="clu",
+    control_method="sequential",
+)
+result = solver.solve()
+```
+
+This requires `VeraGridEngine` to be installed separately; SciPy remains the
+default and does not require VeraGridEngine. CLU uses its own approximate
+minimum-degree ordering, block-triangular analysis, and pivoting, reusing
+symbolic analysis when the Jacobian structure is unchanged. The SciPy-only
+`lu_decomposition` and `sparsity` flags cannot be combined with `linear_solver="clu"`.
+In the 11-case benchmark, CLU converged in sequential mode on all cases; with
+the default simultaneous control mode it converged on 10 of 11. See
+[Results and benchmarks](/pf-tool/methods/results/) for per-case timings and
+mismatches.
+
 ## Step control
 
 The solver applies four safeguards to each Newton step:

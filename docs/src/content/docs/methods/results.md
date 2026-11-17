@@ -9,17 +9,29 @@ The benchmark used these settings:
 - **Tolerance:** $\varepsilon = \text{TEPA}/\text{BASE} = 10^{-4}$ pu.
 - **Timing:** elapsed time includes parsing, case construction, network reduction, and all control passes.
 - **Sparsity benchmark:** Newton-Raphson with `sparsity=True` and `lu_decomposition=False`; all other settings are the defaults.
+- **Levenberg-Marquardt benchmark:** `initial_damping=1e-3`; sequential controls and all other settings are the defaults.
 - **Voltage difference:** "Median / p99 dV" is the absolute difference from the bus voltages stored in the `.dat` file, which are the ANAREDE solution.
+- **CLU benchmark:** `linear_solver="clu"` using VeraGridEngine 6.8.4. The first Numba JIT warm-up was excluded; per-case times include parsing, construction, and all control passes.
 
 | Method                                          | Converged | Mean time per case | Total time |
 | ----------------------------------------------- | --------: | -----------------: | ---------: |
 | Newton-Raphson, simultaneous (`sparsity=False`) |   11 / 11 |              5.0 s |     55.2 s |
 | Newton-Raphson, simultaneous (`sparsity=True`)  |   11 / 11 |              6.9 s |     75.4 s |
 | Newton-Raphson, sequential                      |   11 / 11 |              3.7 s |     40.6 s |
+| Levenberg-Marquardt                             |   10 / 11 |             13.6 s |    149.2 s |
 | Fast decoupled, warm start                      |   11 / 11 |              5.8 s |     63.9 s |
 | Fast decoupled, cold start                      |   11 / 11 |             13.2 s |    145.0 s |
 | Optimization, Newton warm start                 |   11 / 11 |             10.2 s |    112.5 s |
 | Optimization, cold start                        |   11 / 11 |             37.6 s |    413.6 s |
+
+## Levenberg-Marquardt
+
+The measured run converged on 10 of the 11 cases. CASO11 did not converge: it
+stopped after 59 iterations with a 3.117 pu maximum mismatch because a voltage
+magnitude left the solver's allowed range of 0.4–2.0 pu. The other ten cases
+met the default $10^{-4}$ pu tolerance. This run was slower than
+Newton-Raphson; see [the method description](/pf-tool/methods/levenberg-marquardt/)
+for its formulation and limitations.
 
 ## Newton-Raphson, simultaneous controls (default, `sparsity=False`)
 
@@ -56,6 +68,59 @@ This separate run uses `lu_decomposition=False` and `sparsity=True`. All 11 case
 | CASO09 | 12607 |       Yes |          9 |           4.3e-08 |     5.94 |
 | CASO10 | 12611 |       Yes |          6 |           4.4e-09 |     5.34 |
 | CASO11 | 12613 |       Yes |         12 |           8.6e-07 |     7.38 |
+
+## Newton-Raphson with the VeraGrid CLU factorizer
+
+The SciPy and CLU runs below use the same cases and default solver options
+except for `linear_solver`. Times are one-run measurements on this Windows,
+Python 3.12 environment; treat small differences as indicative. CLU's first
+Numba compilation is excluded from the per-case times (the CLU warm-up took
+31.5 s for simultaneous controls and 11.0 s for sequential controls).
+
+| Control method | Linear solver | Converged | Mean time per case | Total time |
+| -------------- | ------------- | --------: | -----------------: | ---------: |
+| Simultaneous   | SciPy         |   11 / 11 |              6.0 s |     66.0 s |
+| Simultaneous   | CLU           |   10 / 11 |              7.5 s |     82.7 s |
+| Sequential     | SciPy         |   11 / 11 |              4.7 s |     51.4 s |
+| Sequential     | CLU           |   11 / 11 |              4.1 s |     44.9 s |
+
+With the default simultaneous control method, CLU did not converge on CASO09
+within 100 Newton iterations (final mismatch $9.0\times10^{-4}$ pu); SciPy
+converged on that case in 9 iterations. Sequential control with CLU converged
+on all 11 cases. Use `control_method="sequential"` with CLU when convergence on
+the complete BIPS set is required.
+
+### CLU, simultaneous controls
+
+| Case   | Converged | Iterations | Max mismatch (pu) | Time (s) |
+| ------ | --------: | ---------: | ----------------: | -------: |
+| CASO01 |       Yes |         11 |           2.8e-06 |     6.61 |
+| CASO02 |       Yes |          5 |           3.0e-05 |     5.02 |
+| CASO03 |       Yes |          9 |           1.1e-09 |     6.17 |
+| CASO04 |       Yes |          6 |           2.2e-09 |     4.76 |
+| CASO05 |       Yes |          5 |           1.4e-06 |     5.94 |
+| CASO06 |       Yes |          6 |           1.4e-09 |     3.16 |
+| CASO07 |       Yes |         11 |           3.0e-10 |     4.86 |
+| CASO08 |       Yes |          6 |           1.0e-08 |     4.93 |
+| CASO09 |        No |        100 |           9.0e-04 |    29.19 |
+| CASO10 |       Yes |          6 |           4.4e-09 |     5.56 |
+| CASO11 |       Yes |         12 |           8.6e-07 |     6.53 |
+
+### Sequential controls, SciPy and CLU
+
+| Case   | SciPy iterations | CLU iterations | SciPy time (s) | CLU time (s) | CLU max mismatch (pu) |
+| ------ | ---------------: | -------------: | -------------: | -----------: | --------------------: |
+| CASO01 |               19 |             19 |           5.67 |         4.96 |               2.6e-07 |
+| CASO02 |               15 |             12 |           6.33 |         4.78 |               1.7e-06 |
+| CASO03 |               18 |             18 |           7.21 |         6.02 |               2.5e-07 |
+| CASO04 |               10 |             10 |           4.01 |         2.56 |               5.8e-07 |
+| CASO05 |               12 |             12 |           2.70 |         2.70 |               1.8e-06 |
+| CASO06 |               12 |             12 |           2.66 |         2.75 |               6.0e-07 |
+| CASO07 |               12 |             16 |           4.19 |         5.70 |               6.0e-07 |
+| CASO08 |               19 |             14 |           5.84 |         4.21 |               9.5e-07 |
+| CASO09 |               15 |             18 |           3.72 |         3.79 |               5.9e-07 |
+| CASO10 |               17 |             11 |           3.96 |         3.55 |               6.0e-07 |
+| CASO11 |               16 |             18 |           5.09 |         3.88 |               6.0e-07 |
 
 ## Newton-Raphson, sequential controls
 

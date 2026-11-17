@@ -17,7 +17,7 @@ export default defineConfig({
 		starlight({
 			title: "BIPS AC/DC Power Flow",
 			description:
-				"AC/DC power flow for the Brazilian Interconnected Power System (BIPS): ANAREDE .dat data model, component handling, Newton-Raphson and optimization power flow.",
+				"AC/DC power flow for the Brazilian Interconnected Power System (BIPS): ANAREDE .dat data model, component handling, Newton-Raphson, Levenberg-Marquardt, and optimization power flow.",
 			customCss: ["katex/dist/katex.min.css", "./src/styles/custom.css"],
 			sidebar: [
 				{
@@ -55,9 +55,11 @@ export default defineConfig({
 					label: "Methods",
 					items: [
 						{ label: "Newton-Raphson", slug: "methods/newton-raphson" },
+						{ label: "Levenberg-Marquardt", slug: "methods/levenberg-marquardt" },
 						{ label: "Fast decoupled", slug: "methods/fast-decoupled" },
 						{ label: "DC power flow", slug: "methods/dc-power-flow" },
 						{ label: "Optimization power flow", slug: "methods/optimization" },
+						{ label: "AC optimal power flow", slug: "methods/acopf" },
 						{ label: "Results and benchmarks", slug: "methods/results" },
 					],
 				},

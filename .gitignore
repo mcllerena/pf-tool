@@ -19,3 +19,7 @@ results/
 .coverage
 .coverage.*
 pf_tool.egg-info/
+
+# Comment out BIPS operation files
+tests/data/op-dat/
+tests/data/op-pwf/

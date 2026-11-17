@@ -6,7 +6,7 @@ description: Install the dependencies and run a power flow.
 ## Requirements
 
 - Python 3.12 or newer. Installing the package pulls in `numpy`, `scipy`, `pyomo`, and `openpyxl`.
-- The [Ipopt](https://coin-or.github.io/Ipopt/) executable, either on `PATH` or passed as `OptimizationPowerFlow(..., ipopt_executable="path/to/ipopt")`. This is required only for the optimization power flow. The benchmark used Ipopt 3.12.13.
+- The [Ipopt](https://coin-or.github.io/Ipopt/) executable, either on `PATH` or passed as `OptimizationPowerFlow(..., ipopt_executable="path/to/ipopt")` or `ACOptimalPowerFlow(..., ipopt_executable="path/to/ipopt")`. This is required only for the Pyomo optimization solvers. The benchmark used Ipopt 3.12.13.
 
 ```bash
 python -m pip install pf-tool
@@ -89,6 +89,15 @@ result = FastDecoupledPowerFlow(
 ```
 
 ```python
+from pf_tool import LevenbergMarquardtPowerFlow
+
+result = LevenbergMarquardtPowerFlow(
+    "tests/data/CASO01-FLOW.dat",
+    initial_damping=1e-3,
+).solve()
+```
+
+```python
 from pf_tool import OptimizationPowerFlow
 
 result = OptimizationPowerFlow(
@@ -98,7 +107,10 @@ result = OptimizationPowerFlow(
 ).solve()
 ```
 
-The same calls are available as `examples/run_nr_powerflow.py`, `examples/run_fd_powerflow.py`, and `examples/run_opt_powerflow.py`. `examples/compare_control_methods.py` solves one case with both Newton-Raphson control methods and prints their iterations, time, and agreement with the stored ANAREDE voltages.
+The same calls are available as `examples/run_nr_powerflow.py`, `examples/run_lm_powerflow.py`, `examples/run_fd_powerflow.py`, and `examples/run_opt_powerflow.py`. `examples/compare_control_methods.py` solves one case with both Newton-Raphson control methods and prints their iterations, time, and agreement with the stored ANAREDE voltages. `examples/run_acopf_restoration.py` demonstrates ACOPF feasibility restoration and progressive tightening.
+
+For voltage-profile optimization with dual reporting, see the dedicated
+[ACOPF method](/pf-tool/methods/acopf/).
 
 ## Export the results
 
@@ -114,25 +126,36 @@ ExportSolution(solver, output_path="results/CASO01-FLOW-nr.xlsx")
 
 ## Solver options
 
-| Class                    | Argument             | Default                     | Meaning                                                                                                                 |
-| ------------------------ | -------------------- | --------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| all                      | `filename`           | required                    | Case to solve                                                                                                           |
-| all                      | `tolerance`          | `TEPA / BASE` from `DCTE`   | Maximum mismatch in pu; DC uses active-power mismatch at non-reference buses                                            |
-| `DCPowerFlow`            | `reference_bus`      | `None`                      | Optional bus number to use as the reference in its connected island                                                     |
-| `DCPowerFlow`            | `print_iterations`   | `False`                     | Print the direct-solve summary                                                                                          |
-| `NewtonRaphsonPowerFlow` | `max_iterations`     | `ACIT` from `DCTE`          | Newton iterations per inner solve                                                                                       |
-| `NewtonRaphsonPowerFlow` | `max_control_passes` | 50                          | Outer passes for discrete controls (sequential method)                                                                  |
-| `NewtonRaphsonPowerFlow` | `control_method`     | `"simultaneous"`            | Solve every control in the Newton system, or `"sequential"` to update generator limits, shunts, and LCCs between solves |
-| `NewtonRaphsonPowerFlow` | `print_iterations`   | `False`                     | Print the per-iteration table shown above                                                                               |
-| `FastDecoupledPowerFlow` | `enhancement`        | `False`                     | `True` uses constant `B'`/`B''` matrices; `False` re-evaluates the decoupled Jacobian blocks each iteration             |
-| `FastDecoupledPowerFlow` | `warm_start`         | `True`                      | Solve with sequential Newton-Raphson first, then re-solve with the fast decoupled method                                |
-| `FastDecoupledPowerFlow` | other arguments      | as `NewtonRaphsonPowerFlow` | `max_iterations`, `max_control_passes`, `print_iterations`; controls always use the sequential method                   |
-| `OptimizationPowerFlow`  | `max_iterations`     | `max(200, 2·ACIT)`          | Ipopt iterations per NLP solve                                                                                          |
-| `OptimizationPowerFlow`  | `max_cpu_time`       | 900 s                       | Ipopt CPU-time limit per NLP solve                                                                                      |
-| `OptimizationPowerFlow`  | `max_control_passes` | 20                          | NLP re-solves for SVC regions and discrete controls                                                                     |
-| `OptimizationPowerFlow`  | `warm_start`         | `True`                      | Use a Newton solve as the initial point and control state                                                               |
-| `OptimizationPowerFlow`  | `print_iterations`   | `False`                     | Print the Ipopt iteration table                                                                                         |
-| `OptimizationPowerFlow`  | `ipopt_executable`   | `None` (search `PATH`)      | Path to the Ipopt binary                                                                                                |
+| Class                         | Argument                   | Default                     | Meaning                                                                                                                 |
+| ----------------------------- | -------------------------- | --------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| all                           | `filename`                 | required                    | Case to solve                                                                                                           |
+| all                           | `tolerance`                | `TEPA / BASE` from `DCTE`   | Maximum mismatch in pu; DC uses active-power mismatch at non-reference buses                                            |
+| `DCPowerFlow`                 | `reference_bus`            | `None`                      | Optional bus number to use as the reference in its connected island                                                     |
+| `DCPowerFlow`                 | `print_iterations`         | `False`                     | Print the direct-solve summary                                                                                          |
+| `NewtonRaphsonPowerFlow`      | `max_iterations`           | `ACIT` from `DCTE`          | Newton iterations per inner solve                                                                                       |
+| `NewtonRaphsonPowerFlow`      | `max_control_passes`       | 50                          | Outer passes for discrete controls (sequential method)                                                                  |
+| `NewtonRaphsonPowerFlow`      | `control_method`           | `"simultaneous"`            | Solve every control in the Newton system, or `"sequential"` to update generator limits, shunts, and LCCs between solves |
+| `NewtonRaphsonPowerFlow`      | `linear_solver`            | `"scipy"`                   | Use SciPy's sparse solver or optional VeraGridEngine CLU (`"clu"`)                                                      |
+| `NewtonRaphsonPowerFlow`      | `print_iterations`         | `False`                     | Print the per-iteration table shown above                                                                               |
+| `LevenbergMarquardtPowerFlow` | `initial_damping`          | `1e-3`                      | Positive finite initial damping for the sparse least-squares steps                                                      |
+| `LevenbergMarquardtPowerFlow` | common solver options      | as Newton-Raphson           | `tolerance`, `max_iterations`, `max_control_passes`, `print_iterations`; controls always use the sequential method      |
+| `FastDecoupledPowerFlow`      | `enhancement`              | `False`                     | `True` uses constant `B'`/`B''` matrices; `False` re-evaluates the decoupled Jacobian blocks each iteration             |
+| `FastDecoupledPowerFlow`      | `warm_start`               | `True`                      | Solve with sequential Newton-Raphson first, then re-solve with the fast decoupled method                                |
+| `FastDecoupledPowerFlow`      | other arguments            | as `NewtonRaphsonPowerFlow` | `max_iterations`, `max_control_passes`, `print_iterations`; controls always use the sequential method                   |
+| `OptimizationPowerFlow`       | `max_iterations`           | `max(200, 2·ACIT)`          | Ipopt iterations per NLP solve                                                                                          |
+| `OptimizationPowerFlow`       | `max_cpu_time`             | 900 s                       | Ipopt CPU-time limit per NLP solve                                                                                      |
+| `OptimizationPowerFlow`       | `max_control_passes`       | 20                          | NLP re-solves for SVC regions and discrete controls                                                                     |
+| `OptimizationPowerFlow`       | `warm_start`               | `True`                      | Use a Newton solve as the initial point and control state                                                               |
+| `OptimizationPowerFlow`       | `print_iterations`         | `False`                     | Print the Ipopt iteration table                                                                                         |
+| `OptimizationPowerFlow`       | `ipopt_executable`         | `None` (search `PATH`)      | Path to the Ipopt binary                                                                                                |
+| `ACOptimalPowerFlow`          | `objective`                | `"voltage_deviation"`       | Minimize weighted voltage deviations from stored targets, or select `"loss_minimization"`                               |
+| `ACOptimalPowerFlow`          | `warm_start`               | `True`                      | Use Newton-Raphson for an initial operating point                                                                       |
+| `ACOptimalPowerFlow`          | `warm_start_linear_solver` | `"scipy"`                   | Use SciPy or optional VeraGridEngine CLU for the Newton warm start only                                                 |
+| `ACOptimalPowerFlow`          | `voltage_reference`        | stored bus voltages         | Optional bus-number-to-voltage target overrides                                                                         |
+| `ACOptimalPowerFlow`          | `voltage_weights`          | all `1.0`                   | Optional nonnegative weights by bus number                                                                              |
+| `ACOptimalPowerFlow`          | `feasibility_restoration`  | `False`                     | First minimize weighted operating-limit slacks, then solve the selected ACOPF objective                                 |
+| `ACOptimalPowerFlow`          | `progressive_tightening`   | `False`                     | Solve through progressively tighter voltage and branch limits before the final operating point                          |
+| `ACOptimalPowerFlow`          | other arguments            | as `OptimizationPowerFlow`  | `tolerance`, `max_iterations`, `max_cpu_time`, `print_iterations`, `ipopt_executable`                                   |
 
 ## Result object
 
@@ -150,6 +173,12 @@ ExportSolution(solver, output_path="results/CASO01-FLOW-nr.xlsx")
 `DCPowerFlowResult` extends this result with the unwrapped bus angles in
 `angles_radians`, reference bus numbers in `reference_buses`, and one
 `DCBranchFlow` record per branch in `branch_flows`.
+
+`ACOptimalPowerFlowResult` additionally provides `objective_value`,
+`termination_condition`, `warm_start_iterations`,
+`feasibility_restoration_iterations`, `progressive_tightening_stages`, and
+labeled `duals`.
+`ACOptimalPowerFlow.get_result_duals(result)` returns a copy of those duals.
 
 ## Building these docs
 

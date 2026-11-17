@@ -17,7 +17,7 @@ solver.solve()
 ExportSolution(solver, output_path="results/CASO01-FLOW-nr.xlsx")
 ```
 
-The same call works with `OptimizationPowerFlow`. The solver-script examples in `examples/` end with this step.
+The same call works with `OptimizationPowerFlow` and `ACOptimalPowerFlow`. The solver-script examples in `examples/` end with this step.
 
 | Argument      | Default   | Meaning                                                        |
 | ------------- | --------- | -------------------------------------------------------------- |

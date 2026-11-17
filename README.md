@@ -12,9 +12,10 @@
 </p>
 
 `pf-tool` solves ANAREDE-style `.dat` cases of the BIPS, about 12,600 buses
-each, with a sparse Newton-Raphson solver, a fast decoupled solver, or an
-optimization-based AC power flow (Pyomo NLP solved with Ipopt), and exports
-every solved component to an Excel workbook.
+each, with sparse Newton-Raphson and Levenberg-Marquardt solvers, a fast
+decoupled solver, an optimization-based AC power flow, or an AC optimal power flow with voltage
+deviation or loss minimization objectives (Pyomo NLPs solved with Ipopt). It
+exports every solved component to an Excel workbook.
 
 ## Quick Start
 
@@ -28,7 +29,7 @@ python -m pip install pf-tool
 
 ### Ipopt
 
-`OptimizationPowerFlow` solves its NLP with
+`OptimizationPowerFlow` and `ACOptimalPowerFlow` solve their NLPs with
 [Ipopt](https://coin-or.github.io/Ipopt/). Download a prebuilt binary from the
 [Ipopt releases](https://github.com/coin-or/Ipopt/releases) (or run
 `conda install -c conda-forge ipopt`), then either add its `bin` folder to `PATH`:
@@ -55,8 +56,8 @@ nlp = OptimizationPowerFlow(
 ).solve()
 ```
 
-`DCPowerFlow`, `NewtonRaphsonPowerFlow`, and `FastDecoupledPowerFlow` do not
-need Ipopt.
+`DCPowerFlow`, `NewtonRaphsonPowerFlow`, `LevenbergMarquardtPowerFlow`, and
+`FastDecoupledPowerFlow` do not need Ipopt.
 
 ### Parsing BIPS files (PWF and NTW)
 
@@ -191,9 +192,11 @@ runnable scripts are in
 ### Power-flow methods
 
 1. [Newton-Raphson](https://mcllerena.github.io/pf-tool/methods/newton-raphson/): nonlinear AC power flow with simultaneous or sequential controls.
-2. [Fast decoupled](https://mcllerena.github.io/pf-tool/methods/fast-decoupled/): decoupled AC power flow with Jacobian-block or constant-matrix options.
-3. [DC power flow](https://mcllerena.github.io/pf-tool/methods/dc-power-flow/): linear active-power flow using the B-prime matrix.
-4. [Optimization power flow](https://mcllerena.github.io/pf-tool/methods/optimization/): constrained nonlinear optimization solved with Ipopt.
+2. [Levenberg-Marquardt](https://mcllerena.github.io/pf-tool/methods/levenberg-marquardt/): sparse, damped least-squares AC power flow.
+3. [Fast decoupled](https://mcllerena.github.io/pf-tool/methods/fast-decoupled/): decoupled AC power flow with Jacobian-block or constant-matrix options.
+4. [DC power flow](https://mcllerena.github.io/pf-tool/methods/dc-power-flow/): linear active-power flow using the B-prime matrix.
+5. [Optimization power flow](https://mcllerena.github.io/pf-tool/methods/optimization/): constrained nonlinear optimization solved with Ipopt.
+6. [AC optimal power flow](https://mcllerena.github.io/pf-tool/methods/acopf/): AC power-balance optimization for voltage-profile or loss minimization, with Ipopt duals.
 
 ## Development
 
