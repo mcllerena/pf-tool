@@ -16,7 +16,7 @@ from pf_tool.robust import RobustACPowerFlow, RobustPowerFlowResult
 try:
     __version__ = version("pf-tool")
 except PackageNotFoundError:
-    __version__ = "0.4.0"
+    __version__ = "0.5.0"
 
 __all__ = [
     "ACOPFViolation",
