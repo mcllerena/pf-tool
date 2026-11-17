@@ -1,5 +1,32 @@
 # Changelog
 
+## [0.5.0](https://github.com/mcllerena/pf-tool/compare/pf-tool-v0.4.0...pf-tool-v0.5.0) (2026-11-17)
+
+
+### Features
+
+* implement ac opf approach for the bips cases ([a6fd68d](https://github.com/mcllerena/pf-tool/commit/a6fd68dc79b82b5d40dac79c46a4d11d6330682d))
+* implement dcopf formulation with ptdf, curtailment and load shedding ([edf630f](https://github.com/mcllerena/pf-tool/commit/edf630fa85da292dcc19c5cd6fc07faa2abbe82c))
+* implement full suite implementation of dc power flow approach ([1b2dbb1](https://github.com/mcllerena/pf-tool/commit/1b2dbb17aaa228e9d25dcf9003640e01a64833ba))
+* implement full suite implementation of dc power flow approach ([6c967fb](https://github.com/mcllerena/pf-tool/commit/6c967fb54eab3545cefe12e199fbbe5dbebb36c7))
+* implement initial robust power flow approach on ill conditioned systems ([a02495a](https://github.com/mcllerena/pf-tool/commit/a02495acf807f94a5b6cc1a9c618efed50b23e85))
+* implement levenberg marquat algorithm for power flow approach ([b62bebe](https://github.com/mcllerena/pf-tool/commit/b62bebe5396079c701f437f3f9ef2ce07e22930a))
+* implement lu decomposition for newton raphson solve parameter ([b06386c](https://github.com/mcllerena/pf-tool/commit/b06386c37824a37d33bf9b39a4ca62bfe96973ba))
+* implement lu decomposition option solver for newton raphson approach ([2052558](https://github.com/mcllerena/pf-tool/commit/2052558fe8c5779f0fcb184b716fdc52cdfcac44))
+
+
+### Bug Fixes
+
+* address pwf parser issues on system data ([18e0116](https://github.com/mcllerena/pf-tool/commit/18e011674af4ff97675bfc11b86c99b1a07b7449))
+* resolve ci issue on solver call ([05cdf9c](https://github.com/mcllerena/pf-tool/commit/05cdf9c831e834b0bf208071b6a2ac8f182dbe35))
+* resolve last test issue ([675c62e](https://github.com/mcllerena/pf-tool/commit/675c62e10aac64f4f403d7a61b9de5bc290b6556))
+* resolve prek issues on environment ([fa77930](https://github.com/mcllerena/pf-tool/commit/fa7793096b7adb3f84fabf8cb3fb46e16c88652f))
+
+
+### Documentation
+
+* implement documentation for new methods and updates on codebase ([44c7057](https://github.com/mcllerena/pf-tool/commit/44c7057099c65deb266fdd7c7bbf09d11fb6e5fc))
+
 ## [0.4.0](https://github.com/mcllerena/pf-tool/compare/pf-tool-v0.3.0...pf-tool-v0.4.0) (2026-11-16)
 
 
