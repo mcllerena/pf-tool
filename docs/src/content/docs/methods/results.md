@@ -8,20 +8,22 @@ The benchmark used these settings:
 - **Environment:** Windows, Python 3.12, Pyomo 6.10.1, and Ipopt 3.12.13.
 - **Tolerance:** $\varepsilon = \text{TEPA}/\text{BASE} = 10^{-4}$ pu.
 - **Timing:** elapsed time includes parsing, case construction, network reduction, and all control passes.
+- **Sparsity benchmark:** Newton-Raphson with `sparsity=True` and `lu_decomposition=False`; all other settings are the defaults.
 - **Voltage difference:** "Median / p99 dV" is the absolute difference from the bus voltages stored in the `.dat` file, which are the ANAREDE solution.
 
-| Method                          | Converged | Mean time per case | Total time |
-| ------------------------------- | --------: | -----------------: | ---------: |
-| Newton-Raphson, simultaneous    |   11 / 11 |              5.0 s |     55.2 s |
-| Newton-Raphson, sequential      |   11 / 11 |              3.7 s |     40.6 s |
-| Fast decoupled, warm start      |   11 / 11 |              5.8 s |     63.9 s |
-| Fast decoupled, cold start      |   11 / 11 |             13.2 s |    145.0 s |
-| Optimization, Newton warm start |   11 / 11 |             10.2 s |    112.5 s |
-| Optimization, cold start        |   11 / 11 |             37.6 s |    413.6 s |
+| Method                                          | Converged | Mean time per case | Total time |
+| ----------------------------------------------- | --------: | -----------------: | ---------: |
+| Newton-Raphson, simultaneous (`sparsity=False`) |   11 / 11 |              5.0 s |     55.2 s |
+| Newton-Raphson, simultaneous (`sparsity=True`)  |   11 / 11 |              6.9 s |     75.4 s |
+| Newton-Raphson, sequential                      |   11 / 11 |              3.7 s |     40.6 s |
+| Fast decoupled, warm start                      |   11 / 11 |              5.8 s |     63.9 s |
+| Fast decoupled, cold start                      |   11 / 11 |             13.2 s |    145.0 s |
+| Optimization, Newton warm start                 |   11 / 11 |             10.2 s |    112.5 s |
+| Optimization, cold start                        |   11 / 11 |             37.6 s |    413.6 s |
 
-## Newton-Raphson, simultaneous controls (default)
+## Newton-Raphson, simultaneous controls (default, `sparsity=False`)
 
-Both Newton-Raphson tables were measured in one run on the same machine, so their times are comparable with each other; the optimization times come from an earlier run.
+The baseline simultaneous and sequential tables were measured in one run on the same machine. The `sparsity=True` table below was measured separately on the same machine, so treat its timing comparison as indicative; the optimization times come from an earlier run.
 
 | Case   | Buses | Converged | Iterations | Max mismatch (pu) | Time (s) | Voltage range (pu) | Median / p99 dV (pu) |
 | ------ | ----: | --------: | ---------: | ----------------: | -------: | -----------------: | -------------------: |
@@ -36,6 +38,24 @@ Both Newton-Raphson tables were measured in one run on the same machine, so thei
 | CASO09 | 12607 |       Yes |          9 |           4.3e-08 |      4.5 |        0.764–1.131 |      0.0005 / 0.0085 |
 | CASO10 | 12611 |       Yes |         12 |           4.4e-09 |      5.0 |        0.745–1.267 |      0.0008 / 0.0092 |
 | CASO11 | 12613 |       Yes |         13 |           8.6e-07 |      5.5 |        0.827–1.123 |      0.0006 / 0.0090 |
+
+## Newton-Raphson, simultaneous controls, `sparsity=True`
+
+This separate run uses `lu_decomposition=False` and `sparsity=True`. All 11 cases converged.
+
+| Case   | Buses | Converged | Iterations | Max mismatch (pu) | Time (s) |
+| ------ | ----: | --------: | ---------: | ----------------: | -------: |
+| CASO01 | 12579 |       Yes |          6 |           2.8e-06 |     6.15 |
+| CASO02 | 12579 |       Yes |          6 |           3.0e-05 |     5.86 |
+| CASO03 | 12579 |       Yes |          9 |           1.1e-09 |     7.11 |
+| CASO04 | 12572 |       Yes |         12 |           2.2e-09 |     7.77 |
+| CASO05 | 12578 |       Yes |          5 |           1.4e-06 |     5.98 |
+| CASO06 | 12613 |       Yes |         15 |           1.4e-09 |     9.07 |
+| CASO07 | 12613 |       Yes |          7 |           3.0e-10 |     6.20 |
+| CASO08 | 12613 |       Yes |         17 |           1.0e-08 |     8.60 |
+| CASO09 | 12607 |       Yes |          9 |           4.3e-08 |     5.94 |
+| CASO10 | 12611 |       Yes |          6 |           4.4e-09 |     5.34 |
+| CASO11 | 12613 |       Yes |         12 |           8.6e-07 |     7.38 |
 
 ## Newton-Raphson, sequential controls
 

@@ -185,16 +185,22 @@ class NewtonRaphsonPowerFlow:
     Set ``lu_decomposition=True`` to select an explicit sparse LU
     factorization for the Newton linear systems. The default retains the
     existing SciPy sparse direct-solve path.
+
+    ``sparsity=True`` selects a minimum-degree, fill-reducing ordering for the
+    sparse factorization. The default ``False`` retains SuperLU's COLAMD
+    ordering. This option is independent of ``lu_decomposition``; sparse
+    matrix storage is always used.
     """
 
     max_control_passes = 50
     tap_voltage_band = 0.01
     # Class-level defaults for solvers created with ``object.__new__`` (tests,
-    # the optimization warm start): silent, with the default control method.
+    # the optimization warm start): silent, with the default solver options.
     filename: Path | None = None
     print_iterations = False
     control_method = "simultaneous"
     lu_decomposition = False
+    sparsity = False
     solver_name = "Newton-Raphson power flow"
     method_label = "Newton-Raphson"
 
@@ -208,11 +214,13 @@ class NewtonRaphsonPowerFlow:
         control_method: str = "simultaneous",
         print_iterations: bool = False,
         lu_decomposition: bool = False,
+        sparsity: bool = False,
     ) -> None:
         if control_method not in _CONTROL_METHODS:
             raise ValueError(f"control_method must be one of {', '.join(_CONTROL_METHODS)}")
         self.control_method = control_method
         self.lu_decomposition = lu_decomposition
+        self.sparsity = sparsity
         self.filename = Path(filename)
         self.print_iterations = bool(print_iterations)
         tables = parse_dat_file(self.filename)
@@ -445,7 +453,7 @@ class NewtonRaphsonPowerFlow:
 
             jacobian = self._build_jacobian(ybus, voltage, svc_states, layout)
             try:
-                step = _sparse_solve(jacobian, residual, self.lu_decomposition)
+                step = _sparse_solve(jacobian, residual, self.lu_decomposition, self.sparsity)
                 # Drop controls whose regulation equation is (nearly) singular:
                 # a tap/phase step far beyond any physical range shows that the
                 # control has no independent effect on its target.
@@ -458,7 +466,7 @@ class NewtonRaphsonPowerFlow:
                     layout = self._layout(svc_states, controls)
                     residual = self._residual(ybus, voltage, specified, svc_states, layout)
                     jacobian = self._build_jacobian(ybus, voltage, svc_states, layout)
-                    step = _sparse_solve(jacobian, residual, self.lu_decomposition)
+                    step = _sparse_solve(jacobian, residual, self.lu_decomposition, self.sparsity)
             except (MatrixRankWarning, FloatingPointError, RuntimeError, ValueError) as exc:
                 return voltage, ybus, iteration, mismatch, f"Sparse Newton solve failed: {exc}"
             if not np.all(np.isfinite(step)):
@@ -961,7 +969,10 @@ class NewtonRaphsonPowerFlow:
         indices = self._indices
         signs = np.ones(len(ltcs))
         try:
-            factor = splu(_network_jacobian(ybus, voltage, layout.angle_buses, layout.pq))
+            factor = splu(
+                _network_jacobian(ybus, voltage, layout.angle_buses, layout.pq),
+                permc_spec=_sparse_ordering(self.sparsity),
+            )
         except RuntimeError:
             factor = None
         for first in range(0, len(ltcs) if factor is not None else 0, 64):
@@ -1193,7 +1204,7 @@ class NewtonRaphsonPowerFlow:
 
             try:
                 residual, jacobian = evaluate(layout)
-                step = _sparse_solve(jacobian, residual, self.lu_decomposition)
+                step = _sparse_solve(jacobian, residual, self.lu_decomposition, self.sparsity)
                 # Phase shifters keep their singularity screening; LTC laws
                 # are regularized by their dead-band slope instead.
                 for _ in range(5):
@@ -1209,7 +1220,7 @@ class NewtonRaphsonPowerFlow:
                     controls = [control for control in controls if not control.conflicting]
                     layout = self._layout(svc_states, controls)
                     residual, jacobian = evaluate(layout)
-                    step = _sparse_solve(jacobian, residual, self.lu_decomposition)
+                    step = _sparse_solve(jacobian, residual, self.lu_decomposition, self.sparsity)
             except (MatrixRankWarning, FloatingPointError, RuntimeError, ValueError) as exc:
                 return (
                     voltage,
@@ -1527,7 +1538,7 @@ class NewtonRaphsonPowerFlow:
                     break
                 jacobian = _network_jacobian(ybus, candidate, angle_buses, empty)
                 try:
-                    step = _sparse_solve(jacobian, mismatch, self.lu_decomposition)
+                    step = _sparse_solve(jacobian, mismatch, self.lu_decomposition, self.sparsity)
                 except (MatrixRankWarning, FloatingPointError, RuntimeError, ValueError):
                     break
                 if not np.all(np.isfinite(step)):
@@ -1616,15 +1627,27 @@ def _network_jacobian(
 
 
 def _sparse_solve(
-    jacobian: csc_matrix, residual: np.ndarray, lu_decomposition: bool = False
+    jacobian: csc_matrix,
+    residual: np.ndarray,
+    lu_decomposition: bool = False,
+    sparsity: bool = False,
 ) -> np.ndarray:
     """Solve ``J x = -residual`` with the selected sparse direct solver."""
+    permc_spec = _sparse_ordering(sparsity)
     if lu_decomposition:
-        factor = splu(jacobian.tocsc())
+        factor = splu(jacobian.tocsc(), permc_spec=permc_spec)
         return np.asarray(factor.solve(-residual), dtype=float)
     with warnings.catch_warnings():
         warnings.simplefilter("error", MatrixRankWarning)
-        return np.asarray(spsolve(jacobian, -residual), dtype=float)
+        return np.asarray(
+            spsolve(jacobian, -residual, permc_spec=permc_spec, use_umfpack=False),
+            dtype=float,
+        )
+
+
+def _sparse_ordering(sparsity: bool) -> str:
+    """Return the PDF-inspired minimum-degree or the default COLAMD ordering."""
+    return "MMD_AT_PLUS_A" if sparsity else "COLAMD"
 
 
 def _conflicting_controls(layout: _Layout, step: np.ndarray) -> list[TapControl]:

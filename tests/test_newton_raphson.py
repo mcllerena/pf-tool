@@ -38,15 +38,17 @@ class SparseLUTests(unittest.TestCase):
         residual = np.array([3.0, -5.0])
 
         for lu_decomposition in (False, True):
-            with self.subTest(lu_decomposition=lu_decomposition):
-                step = _sparse_solve(matrix, residual, lu_decomposition)
-                self.assertTrue(np.allclose(matrix @ step, -residual))
+            for sparsity in (False, True):
+                with self.subTest(lu_decomposition=lu_decomposition, sparsity=sparsity):
+                    step = _sparse_solve(matrix, residual, lu_decomposition, sparsity)
+                    self.assertTrue(np.allclose(matrix @ step, -residual))
 
     def test_sparse_lu_surfaces_singular_systems(self) -> None:
         matrix = csc_matrix([[1.0, 2.0], [2.0, 4.0]])
 
-        with self.assertRaisesRegex(RuntimeError, "singular"):
-            _sparse_solve(matrix, np.ones(2), lu_decomposition=True)
+        for sparsity in (False, True):
+            with self.subTest(sparsity=sparsity), self.assertRaisesRegex(RuntimeError, "singular"):
+                _sparse_solve(matrix, np.ones(2), lu_decomposition=True, sparsity=sparsity)
 
 
 class NewtonRaphsonTests(unittest.TestCase):

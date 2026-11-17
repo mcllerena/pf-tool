@@ -82,16 +82,22 @@ $$
   - LTC: $\kappa_c$ in the $|V_c|$ column, with a zero diagonal;
   - phase shifter: derivatives of $\operatorname{Re}S_{\text{Ext}}$ with respect to the terminal angles and magnitudes, with diagonal $\operatorname{Re}\,\partial S_{\text{Ext}}/\partial\varphi$.
 
-The analytic Jacobian was checked against central finite differences; the maximum error is $4\times10^{-8}$. Each Newton step solves $J\,\Delta x=-F$ with a sparse direct solver. By default, the existing SciPy `spsolve` path is used. To select an explicit sparse LU factorization instead, set `lu_decomposition=True`:
+The analytic Jacobian was checked against central finite differences; the maximum error is $4\times10^{-8}$. It is assembled and stored as a sparse CSC matrix, so zero entries are not stored. Each Newton step solves $J\,\Delta x=-F$ with a sparse direct solver.
+
+The `sparsity` option controls the fill-reducing ordering used by SuperLU:
 
 ```python
-solver = NewtonRaphsonPowerFlow("CASE-FLOW.dat", lu_decomposition=True)
+solver = NewtonRaphsonPowerFlow(
+    "CASE-FLOW.dat",
+    sparsity=True,
+    lu_decomposition=True,
+)
 result = solver.solve()
 ```
 
-With this option enabled, SciPy's `splu` factorization performs the forward/backward substitutions without forming $J^{-1}$. Because the Jacobian changes at each operating point, Newton refactors it for each step. This changes only the linear-system backend, not the Newton-Raphson equations, controls, or iteration strategy.
+With `sparsity=True`, the solver requests SuperLU's `MMD_AT_PLUS_A` minimum-degree ordering to reduce fill during factorization. This is a library-backed analogue of the PDF's ordering strategy, not a custom implementation of its exact OOS2 algorithm. The default `sparsity=False` retains SuperLU's `COLAMD` ordering; matrices are still stored and solved sparsely either way.
 
-The optional LU path follows the workflow in the supplied notes: factor a sparse system into lower and upper triangular factors, then solve by substitution. The implementation delegates factorization to SuperLU rather than coding a dense Crout or Doolittle algorithm. `DCPowerFlow` factors its reduced B-prime matrix once per solve, while the enhanced fast-decoupled method reuses its constant B-prime/B-double-prime factors until the network structure changes.
+`sparsity` and `lu_decomposition` are independent and can be combined either way. `lu_decomposition=False` (default) uses SciPy's `spsolve`; `True` uses an explicit `splu` factorization and solve. In both cases the selected ordering is applied, and the Newton equations and iteration strategy are unchanged. The LU option follows the notes' factor-and-substitute workflow without forming $J^{-1}$ or coding a dense Crout/Doolittle algorithm. Since the Jacobian values change at each operating point, Newton refactors it for each step. `DCPowerFlow` factors its reduced B-prime matrix once per solve, while the enhanced fast-decoupled method reuses its constant B-prime/B-double-prime factors until the network structure changes.
 
 ## Step control
 

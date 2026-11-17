@@ -63,8 +63,14 @@ def test_newton_solves_the_ieee9_case(solved: tuple[NewtonRaphsonPowerFlow, str]
     assert 0.0 <= losses < 5.0
 
 
-def test_newton_lu_option_solves_the_ieee9_case() -> None:
-    solver = NewtonRaphsonPowerFlow(filename=CASE, lu_decomposition=True)
+@pytest.mark.parametrize("lu_decomposition", [False, True])
+@pytest.mark.parametrize("sparsity", [False, True])
+def test_newton_solver_options_solve_the_ieee9_case(lu_decomposition: bool, sparsity: bool) -> None:
+    solver = NewtonRaphsonPowerFlow(
+        filename=CASE,
+        lu_decomposition=lu_decomposition,
+        sparsity=sparsity,
+    )
 
     result = solver.solve()
 
