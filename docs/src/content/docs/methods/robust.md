@@ -30,20 +30,20 @@ solve, the solver writes a sibling `-solved.dat` file containing the retained
 `DBAR` loads and final bus voltage/angle starting points. It does not write that
 file when either solve fails.
 
-| Argument | Default | Meaning |
-| --- | ---: | --- |
-| `filename` | required | Input ANAREDE `.dat` case |
-| `solved_filename` | `<stem>-solved.dat` | Output path for a converged, adjusted case |
-| `max_load_shedding_fraction` | `0.20` | Maximum fraction of positive `DBAR` loads that may be shed |
-| `initial_load_reduction` | `0.10` | First reduced-load trial after a failed full-load attempt; it starts from the original voltage profile |
-| `load_shedding_step` | `0.02` | Initial continuation step as a fraction of original load |
-| `minimum_load_step` | `0.0025` | Stop refining when the load-factor step becomes smaller |
-| `max_attempts` | `40` | Maximum Newton restoration trials |
-| `enhancement` | `False` | Select the constant-matrix fast-decoupled variant when `True` |
-| `tolerance` | `TEPA / BASE` | Mismatch tolerance passed to both solvers |
-| `max_iterations` | `ACIT` | Iteration limit passed to both solvers |
-| `max_control_passes` | `50` | Sequential control-pass limit |
-| `print_iterations` | `False` | Print each Newton and fast-decoupled trial |
+| Argument                     |             Default | Meaning                                                                                                |
+| ---------------------------- | ------------------: | ------------------------------------------------------------------------------------------------------ |
+| `filename`                   |            required | Input ANAREDE `.dat` case                                                                              |
+| `solved_filename`            | `<stem>-solved.dat` | Output path for a converged, adjusted case                                                             |
+| `max_load_shedding_fraction` |              `0.20` | Maximum fraction of positive `DBAR` loads that may be shed                                             |
+| `initial_load_reduction`     |              `0.10` | First reduced-load trial after a failed full-load attempt; it starts from the original voltage profile |
+| `load_shedding_step`         |              `0.02` | Initial continuation step as a fraction of original load                                               |
+| `minimum_load_step`          |            `0.0025` | Stop refining when the load-factor step becomes smaller                                                |
+| `max_attempts`               |                `40` | Maximum Newton restoration trials                                                                      |
+| `enhancement`                |             `False` | Select the constant-matrix fast-decoupled variant when `True`                                          |
+| `tolerance`                  |       `TEPA / BASE` | Mismatch tolerance passed to both solvers                                                              |
+| `max_iterations`             |              `ACIT` | Iteration limit passed to both solvers                                                                 |
+| `max_control_passes`         |                `50` | Sequential control-pass limit                                                                          |
+| `print_iterations`           |             `False` | Print each Newton and fast-decoupled trial                                                             |
 
 The original case is tried first at a load factor of 1.0. If it fails, that
 trial's voltage state is discarded and restoration restarts from the original

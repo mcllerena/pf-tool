@@ -26,9 +26,7 @@ def test_robust_solver_runs_fast_decoupled_and_writes_solved_case(tmp_path: Path
     assert result.solved_case_path == solved_path
     assert solved_path.is_file()
 
-    source_buses = {
-        row["No"]: row for row in parse_dat_file(IEEE9)["DBAR"]
-    }
+    source_buses = {row["No"]: row for row in parse_dat_file(IEEE9)["DBAR"]}
     solved_buses = {row["No"]: row for row in parse_dat_file(solved_path)["DBAR"]}
     for number, source in source_buses.items():
         solved = solved_buses[number]

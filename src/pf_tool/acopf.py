@@ -47,6 +47,10 @@ class ACOptimalPowerFlowResult(PowerFlowResult):
     warm_start_iterations: int = 0
     feasibility_restoration_iterations: int = 0
     progressive_tightening_stages: int = 0
+    load_shedding_mw: dict[int, float] = field(default_factory=dict)
+    load_shedding_mvar: dict[int, float] = field(default_factory=dict)
+    area_shedding_fraction: dict[int, float] = field(default_factory=dict)
+    load_shedding_equity_gini: float | None = None
 
 
 @dataclass(slots=True, frozen=True)
@@ -125,6 +129,9 @@ def _build_acopf_model(
     feasibility_restoration: bool,
     voltage_reference: Mapping[int, float] | None,
     voltage_weights: Mapping[int, float] | None,
+    max_load_shedding_fraction: float,
+    load_shedding_penalty: float,
+    load_shedding_equity_beta: float | None,
 ) -> pyo.ConcreteModel:
     case = reduction.case
     original_count = len(operating_case.buses)
@@ -225,6 +232,58 @@ def _build_acopf_model(
             - scheduled_svc / operating_case.base_mva
         )
 
+    rectifier_active_by_bus: dict[int, float] = {}
+    converter_reactive_by_bus: dict[int, float] = {}
+    for link in operating_case.hvdc_links:
+        rectifier_active_by_bus[link.rectifier_bus] = (
+            rectifier_active_by_bus.get(link.rectifier_bus, 0.0) + link.rectifier_active_mw
+        )
+        converter_reactive_by_bus[link.rectifier_bus] = (
+            converter_reactive_by_bus.get(link.rectifier_bus, 0.0) + link.rectifier_reactive_mvar
+        )
+        converter_reactive_by_bus[link.inverter_bus] = (
+            converter_reactive_by_bus.get(link.inverter_bus, 0.0) + link.inverter_reactive_mvar
+        )
+
+    load_shedding_data: dict[int, dict[str, float | int | str]] = {}
+    area_load_mw: dict[int, float] = {}
+    loads_by_reduced_bus: dict[int, list[int]] = {}
+    if max_load_shedding_fraction > 0.0:
+        for original_index, bus in enumerate(reference_case.buses):
+            active_load_mw = max(
+                bus.p_load_mw - rectifier_active_by_bus.get(bus.number, 0.0),
+                0.0,
+            )
+            if active_load_mw <= 1e-8:
+                continue
+            reduced_index = int(reduction.original_to_reduced[original_index])
+            load_shedding_data[original_index] = {
+                "bus_number": bus.number,
+                "bus_name": bus.name,
+                "area": bus.area,
+                "reduced_index": reduced_index,
+                "active_load_mw": active_load_mw,
+                "reactive_load_mvar": (
+                    bus.q_load_mvar - converter_reactive_by_bus.get(bus.number, 0.0)
+                ),
+            }
+            area_load_mw[bus.area] = area_load_mw.get(bus.area, 0.0) + active_load_mw
+            loads_by_reduced_bus.setdefault(reduced_index, []).append(original_index)
+    area_members = {
+        area: [index for index, data in load_shedding_data.items() if int(data["area"]) == area]
+        for area in area_load_mw
+    }
+    area_ids = sorted(area_load_mw)
+    area_pairs = (
+        [
+            (area_ids[left], area_ids[right])
+            for left in range(len(area_ids))
+            for right in range(left + 1, len(area_ids))
+        ]
+        if load_shedding_equity_beta is not None
+        else []
+    )
+
     ybus = build_ybus(case).tocsr()
     neighbors = {
         index: [
@@ -250,6 +309,53 @@ def _build_acopf_model(
     model.ORIGINAL_BUS = pyo.Set(initialize=original_ids, ordered=True)
     model.PGEN = pyo.Set(initialize=list(p_groups), ordered=True)
     model.QGEN = pyo.Set(initialize=list(q_groups), ordered=True)
+    model.LOAD_BUS = pyo.Set(initialize=list(load_shedding_data), ordered=True)
+    model.AREA = pyo.Set(initialize=sorted(area_load_mw), ordered=True)
+    model.AREA_PAIR = pyo.Set(dimen=2, initialize=area_pairs, ordered=True)
+    model.load_shed_fraction = pyo.Var(
+        model.LOAD_BUS,
+        within=pyo.NonNegativeReals,
+        bounds=(0.0, max_load_shedding_fraction),
+        initialize=0.0,
+    )
+    model.area_shedding_fraction = pyo.Expression(
+        model.AREA,
+        rule=lambda m, area: (
+            sum(
+                float(load_shedding_data[index]["active_load_mw"]) * m.load_shed_fraction[index]
+                for index in area_members[area]
+            )
+            / area_load_mw[area]
+        ),
+    )
+    model.equity_gap = pyo.Var(
+        model.AREA_PAIR,
+        within=pyo.NonNegativeReals,
+        initialize=0.0,
+    )
+    model.equity_gap_positive = pyo.Constraint(
+        model.AREA_PAIR,
+        rule=lambda m, first, second: (
+            m.equity_gap[first, second]
+            >= m.area_shedding_fraction[first] - m.area_shedding_fraction[second]
+        ),
+    )
+    model.equity_gap_negative = pyo.Constraint(
+        model.AREA_PAIR,
+        rule=lambda m, first, second: (
+            m.equity_gap[first, second]
+            >= m.area_shedding_fraction[second] - m.area_shedding_fraction[first]
+        ),
+    )
+    equity_beta = 0.0 if load_shedding_equity_beta is None else float(load_shedding_equity_beta)
+    model.equity_gini_limit = pyo.ConstraintList()
+    if load_shedding_equity_beta is not None and len(area_load_mw) > 1:
+        model.equity_gini_limit.add(
+            sum(model.equity_gap[pair] for pair in area_pairs)
+            <= equity_beta
+            * (len(area_load_mw) - 1)
+            * sum(model.area_shedding_fraction[area] for area in area_load_mw)
+        )
 
     model.vm = pyo.Var(
         model.BUS,
@@ -387,7 +493,14 @@ def _build_acopf_model(
         model.BUS,
         rule=lambda m, index: (
             m.p_calculated[index]
-            == p_fixed[index] + sum(m.pgen[k] for k in pgen_by_bus.get(index, []))
+            == p_fixed[index]
+            + sum(m.pgen[k] for k in pgen_by_bus.get(index, []))
+            + sum(
+                float(load_shedding_data[load_index]["active_load_mw"])
+                / operating_case.base_mva
+                * m.load_shed_fraction[load_index]
+                for load_index in loads_by_reduced_bus.get(index, [])
+            )
         ),
     )
     model.q_balance = pyo.Constraint(
@@ -397,6 +510,12 @@ def _build_acopf_model(
             == q_fixed[index]
             + sum(m.qgen[k] for k in qgen_by_bus.get(index, []))
             + sum(m.qsvc[k] for k in svc_by_reduced_bus.get(index, []))
+            + sum(
+                float(load_shedding_data[load_index]["reactive_load_mvar"])
+                / operating_case.base_mva
+                * m.load_shed_fraction[load_index]
+                for load_index in loads_by_reduced_bus.get(index, [])
+            )
         ),
     )
     model.voltage_lower = pyo.Constraint(
@@ -457,8 +576,21 @@ def _build_acopf_model(
         objective_expression = sum(model.p_calculated[index] for index in model.BUS)
     else:
         raise ValueError(f"Unsupported ACOPF objective: {objective}")
+    total_sheddable_load_mw = sum(
+        float(data["active_load_mw"]) for data in load_shedding_data.values()
+    )
+    load_shedding_objective = (
+        load_shedding_penalty
+        * sum(
+            float(load_shedding_data[index]["active_load_mw"]) * model.load_shed_fraction[index]
+            for index in model.LOAD_BUS
+        )
+        / total_sheddable_load_mw
+        if total_sheddable_load_mw > 0.0
+        else 0.0
+    )
     model.objective = pyo.Objective(
-        expr=objective_expression + soft_limit_penalty,
+        expr=objective_expression + soft_limit_penalty + load_shedding_objective,
         sense=pyo.minimize,
     )
     model.dual = pyo.Suffix(direction=pyo.Suffix.IMPORT)
@@ -473,6 +605,13 @@ def _build_acopf_model(
     model._q_fixed = q_fixed
     model._p_groups = p_groups
     model._q_groups = q_groups
+    model._load_shedding_data = load_shedding_data
+    model._area_load_mw = area_load_mw
+    model._load_shedding_labels = {
+        index: str(data["bus_number"]) for index, data in load_shedding_data.items()
+    }
+    model._area_labels = {1: "area-load-shedding-gini"} if len(model.equity_gini_limit) else {}
+    model._equity_pair_labels = {pair: f"area {pair[0]} vs area {pair[1]}" for pair in area_pairs}
     model._svc_data = svc_data
     model._objective_type = objective
     model._feasibility_restoration = feasibility_restoration
@@ -672,6 +811,8 @@ def _copy_model_variable_values(source: pyo.ConcreteModel, destination: pyo.Conc
         "voltage_lower_slack",
         "voltage_upper_slack",
         "branch_slack",
+        "load_shed_fraction",
+        "equity_gap",
     ):
         source_variable = getattr(source, name)
         destination_variable = getattr(destination, name)
@@ -681,9 +822,7 @@ def _copy_model_variable_values(source: pyo.ConcreteModel, destination: pyo.Conc
                 destination_variable[index].set_value(value)
 
 
-def _model_mismatch(model: pyo.ConcreteModel) -> tuple[float, float]:
-    voltage = _model_voltage(model)
-    calculated = calculate_power(model._ybus, voltage)
+def _model_specified_power(model: pyo.ConcreteModel) -> tuple[np.ndarray, np.ndarray]:
     p_specified = model._p_fixed.copy()
     q_specified = model._q_fixed.copy()
     for index in model._p_groups:
@@ -692,6 +831,23 @@ def _model_mismatch(model: pyo.ConcreteModel) -> tuple[float, float]:
         q_specified[index] += float(pyo.value(model.qgen[index]))
     for index, data in model._svc_data.items():
         q_specified[int(data["bus_index"])] += float(pyo.value(model.qsvc[index]))
+    for index in model.LOAD_BUS:
+        data = model._load_shedding_data[index]
+        fraction = float(pyo.value(model.load_shed_fraction[index]))
+        reduced_index = int(data["reduced_index"])
+        p_specified[reduced_index] += (
+            float(data["active_load_mw"]) * fraction / model._operating_case.base_mva
+        )
+        q_specified[reduced_index] += (
+            float(data["reactive_load_mvar"]) * fraction / model._operating_case.base_mva
+        )
+    return p_specified, q_specified
+
+
+def _model_mismatch(model: pyo.ConcreteModel) -> tuple[float, float]:
+    voltage = _model_voltage(model)
+    calculated = calculate_power(model._ybus, voltage)
+    p_specified, q_specified = _model_specified_power(model)
     return (
         float(np.max(np.abs(calculated.real - p_specified))),
         float(np.max(np.abs(calculated.imag - q_specified))),
@@ -738,6 +894,13 @@ def _duals(model: pyo.ConcreteModel, reduction: ReducedCase) -> dict[str, Any]:
         "svc_upper": constraint_values(model.svc_upper, svc_labels),
         "branch_flow_from": constraint_values(model.branch_flow_from_limit, model._branch_labels),
         "branch_flow_to": constraint_values(model.branch_flow_to_limit, model._branch_labels),
+        "load_shedding_equity": constraint_values(model.equity_gini_limit, model._area_labels),
+        "load_shedding_equity_gaps_positive": constraint_values(
+            model.equity_gap_positive, model._equity_pair_labels
+        ),
+        "load_shedding_equity_gaps_negative": constraint_values(
+            model.equity_gap_negative, model._equity_pair_labels
+        ),
         "variable_bounds": {
             "lower": {
                 "voltage_magnitude": bound_values(model.vm, "ipopt_zL_out", vm_labels),
@@ -754,6 +917,9 @@ def _duals(model: pyo.ConcreteModel, reduction: ReducedCase) -> dict[str, Any]:
                 "branch_slack": bound_values(
                     model.branch_slack, "ipopt_zL_out", model._branch_labels
                 ),
+                "load_shedding_fraction": bound_values(
+                    model.load_shed_fraction, "ipopt_zL_out", model._load_shedding_labels
+                ),
             },
             "upper": {
                 "voltage_magnitude": bound_values(model.vm, "ipopt_zU_out", vm_labels),
@@ -769,6 +935,9 @@ def _duals(model: pyo.ConcreteModel, reduction: ReducedCase) -> dict[str, Any]:
                 ),
                 "branch_slack": bound_values(
                     model.branch_slack, "ipopt_zU_out", model._branch_labels
+                ),
+                "load_shedding_fraction": bound_values(
+                    model.load_shed_fraction, "ipopt_zU_out", model._load_shedding_labels
                 ),
             },
         },
@@ -811,6 +980,9 @@ class ACOptimalPowerFlow:
         max_cpu_time: float = 900.0,
         warm_start: bool = True,
         warm_start_linear_solver: Literal["scipy", "clu"] = "scipy",
+        max_load_shedding_fraction: float = 0.0,
+        load_shedding_penalty: float = 1_000_000.0,
+        load_shedding_equity_beta: float | None = 0.3,
         feasibility_restoration: bool = False,
         progressive_tightening: bool = False,
         print_iterations: bool = False,
@@ -822,6 +994,18 @@ class ACOptimalPowerFlow:
             raise ValueError("voltage_violation_penalty must be finite and greater than zero")
         if not math.isfinite(branch_violation_penalty) or branch_violation_penalty <= 0.0:
             raise ValueError("branch_violation_penalty must be finite and greater than zero")
+        if (
+            not math.isfinite(max_load_shedding_fraction)
+            or not 0.0 <= max_load_shedding_fraction <= 1.0
+        ):
+            raise ValueError("max_load_shedding_fraction must be between 0 and 1")
+        if not math.isfinite(load_shedding_penalty) or load_shedding_penalty <= 0.0:
+            raise ValueError("load_shedding_penalty must be finite and greater than zero")
+        if load_shedding_equity_beta is not None and (
+            not math.isfinite(load_shedding_equity_beta)
+            or not 0.0 <= load_shedding_equity_beta <= 1.0
+        ):
+            raise ValueError("load_shedding_equity_beta must be between 0 and 1 or None")
         if warm_start_linear_solver not in ("scipy", "clu"):
             raise ValueError("warm_start_linear_solver must be 'scipy' or 'clu'")
         self.filename = Path(filename)
@@ -850,6 +1034,11 @@ class ACOptimalPowerFlow:
         self.max_cpu_time = float(max_cpu_time)
         self.warm_start = bool(warm_start)
         self.warm_start_linear_solver = warm_start_linear_solver
+        self.max_load_shedding_fraction = float(max_load_shedding_fraction)
+        self.load_shedding_penalty = float(load_shedding_penalty)
+        self.load_shedding_equity_beta = (
+            None if load_shedding_equity_beta is None else float(load_shedding_equity_beta)
+        )
         self.feasibility_restoration = bool(feasibility_restoration)
         self.progressive_tightening = bool(progressive_tightening)
         self.print_iterations = bool(print_iterations)
@@ -924,6 +1113,9 @@ class ACOptimalPowerFlow:
                 feasibility_restoration=restoring,
                 voltage_reference=self.voltage_reference,
                 voltage_weights=self.voltage_weights,
+                max_load_shedding_fraction=self.max_load_shedding_fraction,
+                load_shedding_penalty=self.load_shedding_penalty,
+                load_shedding_equity_beta=self.load_shedding_equity_beta,
             )
             if previous_model is not None:
                 _copy_model_variable_values(previous_model, model)
@@ -990,6 +1182,38 @@ class ACOptimalPowerFlow:
             bus.angle_radians = float(np.angle(expanded_voltage[index]))
         ybus = build_ybus(operating_case)
         operating_case.solved_voltage = expanded_voltage.copy()
+        load_shedding_mw: dict[int, float] = {}
+        load_shedding_mvar: dict[int, float] = {}
+        for index, data in model._load_shedding_data.items():
+            fraction = float(pyo.value(model.load_shed_fraction[index]))
+            active_shed = float(data["active_load_mw"]) * fraction
+            reactive_shed = float(data["reactive_load_mvar"]) * fraction
+            bus_number = int(data["bus_number"])
+            if active_shed > 1e-6:
+                load_shedding_mw[bus_number] = active_shed
+            if abs(reactive_shed) > 1e-6:
+                load_shedding_mvar[bus_number] = reactive_shed
+        area_shedding_fraction = {
+            area: sum(
+                float(model._load_shedding_data[index]["active_load_mw"])
+                * float(pyo.value(model.load_shed_fraction[index]))
+                for index in model.LOAD_BUS
+                if int(model._load_shedding_data[index]["area"]) == area
+            )
+            / area_load
+            for area, area_load in model._area_load_mw.items()
+        }
+        area_risks = list(area_shedding_fraction.values())
+        if len(area_risks) > 1:
+            risk_mean = sum(area_risks) / len(area_risks)
+            equity_gini = (
+                sum(abs(first - second) for first in area_risks for second in area_risks)
+                / (2 * len(area_risks) * (len(area_risks) - 1) * risk_mean)
+                if risk_mean > 0.0
+                else 0.0
+            )
+        else:
+            equity_gini = None
         self.case = operating_case
         self.reduction = reduction
         self.result = ACOptimalPowerFlowResult(
@@ -1005,6 +1229,10 @@ class ACOptimalPowerFlow:
             warm_start_iterations=self.warm_start_iterations,
             feasibility_restoration_iterations=restoration_iterations,
             progressive_tightening_stages=tightening_stages,
+            load_shedding_mw=load_shedding_mw,
+            load_shedding_mvar=load_shedding_mvar,
+            area_shedding_fraction=area_shedding_fraction,
+            load_shedding_equity_gini=equity_gini,
         )
         return self.result
 
@@ -1039,14 +1267,7 @@ class ACOptimalPowerFlow:
         violations: list[ACOPFViolation] = []
         voltage = _model_voltage(model)
         calculated = calculate_power(model._ybus, voltage)
-        p_specified = model._p_fixed.copy()
-        q_specified = model._q_fixed.copy()
-        for index in model._p_groups:
-            p_specified[index] += float(pyo.value(model.pgen[index]))
-        for index in model._q_groups:
-            q_specified[index] += float(pyo.value(model.qgen[index]))
-        for index, data in model._svc_data.items():
-            q_specified[int(data["bus_index"])] += float(pyo.value(model.qsvc[index]))
+        p_specified, q_specified = _model_specified_power(model)
 
         for index, bus in enumerate(reduction.case.buses):
             p_residual = float(calculated[index].real - p_specified[index])

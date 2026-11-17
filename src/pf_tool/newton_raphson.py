@@ -192,7 +192,7 @@ class NewtonRaphsonPowerFlow:
     ordering. This option is independent of ``lu_decomposition``; sparse
     matrix storage is always used.
 
-    Set ``linear_solver="clu"`` to use VeraGridEngine's sparse CLU factorizer.
+    Set ``linear_solver="clu"`` to use sparse CLU factorizer.
     CLU is optional and is loaded only when selected; its symbolic analysis is
     reused when successive Jacobians have the same sparse structure.
     """

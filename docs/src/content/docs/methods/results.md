@@ -69,7 +69,7 @@ This separate run uses `lu_decomposition=False` and `sparsity=True`. All 11 case
 | CASO10 | 12611 |       Yes |          6 |           4.4e-09 |     5.34 |
 | CASO11 | 12613 |       Yes |         12 |           8.6e-07 |     7.38 |
 
-## Newton-Raphson with the VeraGrid CLU factorizer
+## Newton-Raphson with the CLU factorizer
 
 The SciPy and CLU runs below use the same cases and default solver options
 except for `linear_solver`. Times are one-run measurements on this Windows,

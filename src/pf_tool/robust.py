@@ -87,9 +87,7 @@ class RobustACPowerFlow:
             raise ValueError("load_shedding_step must be in (0, 1]")
         if not isfinite(initial_load_reduction) or not (0.0 < initial_load_reduction <= 1.0):
             raise ValueError("initial_load_reduction must be in (0, 1]")
-        if not isfinite(minimum_load_step) or not (
-            0.0 < minimum_load_step <= load_shedding_step
-        ):
+        if not isfinite(minimum_load_step) or not (0.0 < minimum_load_step <= load_shedding_step):
             raise ValueError("minimum_load_step must be in (0, load_shedding_step]")
         if max_attempts < 1:
             raise ValueError("max_attempts must be at least one")
@@ -289,7 +287,9 @@ class RobustACPowerFlow:
             restoration_attempts=attempts,
             restoration_iterations=restoration_iterations,
             fast_decoupled_iterations=(
-                best_fast_decoupled_iterations if best_result is not None else last_fast_decoupled_iterations  # noqa: E501
+                best_fast_decoupled_iterations
+                if best_result is not None
+                else last_fast_decoupled_iterations  # noqa: E501
             ),
             full_load_converged=full_load_converged,
             solved_case_path=solved_case_path,
@@ -315,9 +315,9 @@ class RobustACPowerFlow:
             bus.p_load_mw = self._scaled_positive_load(active_load, factor) + rectifier_p.get(
                 bus.number, 0.0
             )
-            bus.q_load_mvar = self._scaled_positive_load(
-                reactive_load, factor
-            ) + converter_q.get(bus.number, 0.0)
+            bus.q_load_mvar = self._scaled_positive_load(reactive_load, factor) + converter_q.get(
+                bus.number, 0.0
+            )
 
     @staticmethod
     def _scaled_positive_load(load: float, factor: float) -> float:

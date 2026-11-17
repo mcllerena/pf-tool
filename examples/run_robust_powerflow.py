@@ -3,11 +3,7 @@ from pathlib import Path
 from pf_tool import RobustACPowerFlow
 
 case_path = (
-    Path(__file__).resolve().parents[1]
-    / "tests"
-    / "data"
-    / "op-dat"
-    / "20240820_C_00-00.dat"
+    Path(__file__).resolve().parents[1] / "tests" / "data" / "op-dat" / "20240820_C_00-00.dat"
 )
 
 solver = RobustACPowerFlow(

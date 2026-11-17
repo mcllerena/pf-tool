@@ -61,6 +61,48 @@ have NLP flow constraints; their post-solve loading is still available through
 Ipopt solves a nonconvex NLP and may return a local optimum. No generation-cost
 data is required or inferred.
 
+## Equity-aware load shedding
+
+The ACOPF can optionally shed native bus load when needed. It is disabled by
+default (`max_load_shedding_fraction=0`) so existing calls never curtail load
+silently. When enabled, each load bus has a bounded shedding fraction
+$0 \leq \alpha_i \leq \texttt{max\_load\_shedding\_fraction}$. The same
+fraction is applied to active and reactive native load, preserving its power
+factor; modeled LCC converter injections are excluded.
+
+The objective adds a penalty proportional to the fraction of total native
+active load shed:
+
+$$
+\lambda_{LS}\frac{\sum_i \alpha_i P_{L,i}}{\sum_i P_{L,i}}.
+$$
+
+`load_shedding_penalty` is $\lambda_{LS}$ (default `1000000.0`); it is an
+optimization weight, not a monetary price. With no generator cost curves, the
+existing voltage-deviation or loss objective remains in use.
+
+For the equity cap, let $r_a$ be the fraction of active native load shed in
+DBAR area $a$. The model imposes the paper's Gini-coefficient bound over areas:
+
+$$
+\frac{\sum_{a<b}|r_a-r_b|}
+{(n_A-1)\sum_a r_a} \leq \beta,
+$$
+
+where $n_A$ is the number of areas containing eligible load. The default
+`load_shedding_equity_beta=0.3` is configurable in $[0,1]$; pass `None` to
+disable the equity cap. The result reports `load_shedding_mw`,
+`load_shedding_mvar`, `area_shedding_fraction`, and
+`load_shedding_equity_gini`.
+
+This is a scalable adaptation of Fang, Wang, and Ding's
+[equity-aware load-shedding model](https://arxiv.org/abs/2406.17877). Their
+paper uses a pairwise Gini constraint over buses and reports a GAMS/CONOPT
+study on a modified IEEE-14 case; it is not a convergence algorithm or a BIPS
+validation. This implementation aggregates the fairness measure by DBAR area
+to avoid a pairwise constraint over thousands of load buses, and uses one
+shared active/reactive shedding fraction per bus.
+
 ## Usage
 
 ```python
@@ -70,15 +112,18 @@ solver = ACOptimalPowerFlow(
     "tests/data/CASO01-FLOW.dat",
     objective="voltage_deviation",
     warm_start=True,
+    max_load_shedding_fraction=0.2,
+    load_shedding_equity_beta=0.3,
 )
 result = solver.solve()
 print(result.converged, result.objective_value, result.max_mismatch)
+print(result.load_shedding_mw, result.area_shedding_fraction)
 ```
 
 Ipopt must be available on `PATH` or passed through `ipopt_executable`.
 `warm_start=True` (the default) runs Newton-Raphson first and uses its solved
 voltages and control state to initialize the NLP.
-Set `warm_start_linear_solver="clu"` to use VeraGridEngine's optional CLU
+Set `warm_start_linear_solver="clu"` to use CLU
 factorizer for that Newton solve; the default is `"scipy"`. This option affects
 only the warm start: Ipopt still performs the ACOPF optimization using its own
 configured linear solver.
@@ -93,7 +138,7 @@ Ipopt iterations.
 | Warm-start solver | Lower-voltage violations (count / total excess pu) | Upper-voltage violations (count / total excess pu) | Branch-rating violations (count / total excess MVA) | Total |
 | ----------------- | -------------------------------------------------: | -------------------------------------------------: | --------------------------------------------------: | ----: |
 | SciPy (default)   |                                 11 / 0.30737787 pu |                                 21 / 0.30829699 pu |                                  32 / 1269.7751 MVA |    64 |
-| VeraGrid CLU      |                                 11 / 0.30737787 pu |                                 21 / 0.30829699 pu |                                  32 / 1269.7751 MVA |    64 |
+| CLU               |                                 11 / 0.30737787 pu |                                 21 / 0.30829699 pu |                                  32 / 1269.7751 MVA |    64 |
 
 For this case, CLU did not reduce either the number or the measured severity
 of violations; the reported amounts differed only by numerical roundoff. CLU
