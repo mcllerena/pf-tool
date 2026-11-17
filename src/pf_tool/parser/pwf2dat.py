@@ -306,7 +306,11 @@ class Pwf2DatParser:
 
     def parse(self) -> str:
         """Parse the source file and return its DAT representation."""
-        text = self.filename.read_bytes().decode("cp1252", errors="replace")
+        source = self.filename.read_bytes()
+        try:
+            text = source.decode("utf-8-sig")
+        except UnicodeDecodeError:
+            text = source.decode("cp1252", errors="replace")
         tables: dict[str, list[dict[str, object]]] = defaultdict(list)
         active: str | None = None
         dbsh_parent: int | None = None
@@ -400,7 +404,7 @@ class Pwf2DatParser:
 
         if not any(record["Mn"].upper() == "BASE" for record in tables["DCTE"]):
             tables["DCTE"].insert(0, {"Mn": "BASE", "Val": base_mva})
-        return render_dat(tables, {"BASE": base_mva})
+        return f"# Generated from {self.filename.name}\n\n" + render_dat(tables, {"BASE": base_mva})
 
     def convert(self, output_path: str | Path | None = None) -> Path:
         """Write the parsed DAT representation and return its path."""
