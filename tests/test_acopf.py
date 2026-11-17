@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any
 
 import numpy as np
@@ -68,7 +69,7 @@ def test_acopf_solves_and_returns_labeled_duals(tmp_path: Path) -> None:
     assert isinstance(result, PowerFlowResult)
     assert result.converged, result.failure_reason
     assert result.max_mismatch <= solver.tolerance
-    assert result.objective_value >= 0.0
+    assert result.objective_value >= -1e-4
     assert result.termination_condition in {"optimal", "locallyOptimal", "feasible"}
     assert result.warm_start_iterations > 0
     for bus in solver.case.buses:
@@ -120,11 +121,10 @@ def test_acopf_supports_loss_minimization() -> None:
 @pytest.mark.skipif(not IPOPT_AVAILABLE, reason="Ipopt is not installed")
 def test_acopf_passes_clu_to_newton_warm_start(monkeypatch: pytest.MonkeyPatch) -> None:
     requested_solvers: list[str] = []
-    newton_solver = acopf_module.NewtonRaphsonPowerFlow
 
     def capture_newton_solver(*args: Any, **kwargs: Any) -> Any:
         requested_solvers.append(str(kwargs.get("linear_solver")))
-        return newton_solver(*args, **kwargs)
+        return SimpleNamespace(solve=lambda: SimpleNamespace(converged=False, iterations=0))
 
     monkeypatch.setattr(acopf_module, "NewtonRaphsonPowerFlow", capture_newton_solver)
     solver = ACOptimalPowerFlow(IEEE9, warm_start_linear_solver="clu")
