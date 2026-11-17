@@ -5,6 +5,7 @@ from __future__ import annotations
 import warnings
 from dataclasses import dataclass, replace
 from pathlib import Path
+from typing import Any, Literal
 
 import numpy as np
 from scipy.sparse import bmat, coo_matrix, csc_matrix, diags, hstack, vstack
@@ -190,6 +191,10 @@ class NewtonRaphsonPowerFlow:
     sparse factorization. The default ``False`` retains SuperLU's COLAMD
     ordering. This option is independent of ``lu_decomposition``; sparse
     matrix storage is always used.
+
+    Set ``linear_solver="clu"`` to use VeraGridEngine's sparse CLU factorizer.
+    CLU is optional and is loaded only when selected; its symbolic analysis is
+    reused when successive Jacobians have the same sparse structure.
     """
 
     max_control_passes = 50
@@ -201,6 +206,8 @@ class NewtonRaphsonPowerFlow:
     control_method = "simultaneous"
     lu_decomposition = False
     sparsity = False
+    linear_solver: Literal["scipy", "clu"] = "scipy"
+    _clu_factorizer: Any | None = None
     solver_name = "Newton-Raphson power flow"
     method_label = "Newton-Raphson"
 
@@ -215,12 +222,19 @@ class NewtonRaphsonPowerFlow:
         print_iterations: bool = False,
         lu_decomposition: bool = False,
         sparsity: bool = False,
+        linear_solver: Literal["scipy", "clu"] = "scipy",
     ) -> None:
         if control_method not in _CONTROL_METHODS:
             raise ValueError(f"control_method must be one of {', '.join(_CONTROL_METHODS)}")
+        if linear_solver not in ("scipy", "clu"):
+            raise ValueError("linear_solver must be 'scipy' or 'clu'")
+        if linear_solver == "clu" and (lu_decomposition or sparsity):
+            raise ValueError("lu_decomposition and sparsity are SciPy-only options")
         self.control_method = control_method
         self.lu_decomposition = lu_decomposition
         self.sparsity = sparsity
+        self.linear_solver = linear_solver
+        self._clu_factorizer = None
         self.filename = Path(filename)
         self.print_iterations = bool(print_iterations)
         tables = parse_dat_file(self.filename)
@@ -425,6 +439,11 @@ class NewtonRaphsonPowerFlow:
             ],
         )
 
+    def _solve_linear_system(self, jacobian: csc_matrix, residual: np.ndarray) -> np.ndarray:
+        if self.linear_solver == "clu":
+            return _clu_sparse_solve(jacobian, residual, self)
+        return _sparse_solve(jacobian, residual, self.lu_decomposition, self.sparsity)
+
     def _solve_network(
         self, initial_voltage: np.ndarray
     ) -> tuple[np.ndarray, csc_matrix, int, float, str | None]:
@@ -453,7 +472,7 @@ class NewtonRaphsonPowerFlow:
 
             jacobian = self._build_jacobian(ybus, voltage, svc_states, layout)
             try:
-                step = _sparse_solve(jacobian, residual, self.lu_decomposition, self.sparsity)
+                step = self._solve_linear_system(jacobian, residual)
                 # Drop controls whose regulation equation is (nearly) singular:
                 # a tap/phase step far beyond any physical range shows that the
                 # control has no independent effect on its target.
@@ -466,7 +485,7 @@ class NewtonRaphsonPowerFlow:
                     layout = self._layout(svc_states, controls)
                     residual = self._residual(ybus, voltage, specified, svc_states, layout)
                     jacobian = self._build_jacobian(ybus, voltage, svc_states, layout)
-                    step = _sparse_solve(jacobian, residual, self.lu_decomposition, self.sparsity)
+                    step = self._solve_linear_system(jacobian, residual)
             except (MatrixRankWarning, FloatingPointError, RuntimeError, ValueError) as exc:
                 return voltage, ybus, iteration, mismatch, f"Sparse Newton solve failed: {exc}"
             if not np.all(np.isfinite(step)):
@@ -1204,7 +1223,7 @@ class NewtonRaphsonPowerFlow:
 
             try:
                 residual, jacobian = evaluate(layout)
-                step = _sparse_solve(jacobian, residual, self.lu_decomposition, self.sparsity)
+                step = self._solve_linear_system(jacobian, residual)
                 # Phase shifters keep their singularity screening; LTC laws
                 # are regularized by their dead-band slope instead.
                 for _ in range(5):
@@ -1220,7 +1239,7 @@ class NewtonRaphsonPowerFlow:
                     controls = [control for control in controls if not control.conflicting]
                     layout = self._layout(svc_states, controls)
                     residual, jacobian = evaluate(layout)
-                    step = _sparse_solve(jacobian, residual, self.lu_decomposition, self.sparsity)
+                    step = self._solve_linear_system(jacobian, residual)
             except (MatrixRankWarning, FloatingPointError, RuntimeError, ValueError) as exc:
                 return (
                     voltage,
@@ -1538,7 +1557,7 @@ class NewtonRaphsonPowerFlow:
                     break
                 jacobian = _network_jacobian(ybus, candidate, angle_buses, empty)
                 try:
-                    step = _sparse_solve(jacobian, mismatch, self.lu_decomposition, self.sparsity)
+                    step = self._solve_linear_system(jacobian, mismatch)
                 except (MatrixRankWarning, FloatingPointError, RuntimeError, ValueError):
                     break
                 if not np.all(np.isfinite(step)):
@@ -1643,6 +1662,42 @@ def _sparse_solve(
             spsolve(jacobian, -residual, permc_spec=permc_spec, use_umfpack=False),
             dtype=float,
         )
+
+
+def _clu_sparse_solve(
+    jacobian: csc_matrix, residual: np.ndarray, solver: NewtonRaphsonPowerFlow
+) -> np.ndarray:
+    try:
+        from VeraGridEngine.Utils.Sparse import clu
+    except ImportError as exc:
+        raise ImportError(
+            "linear_solver='clu' requires the optional VeraGridEngine package"
+        ) from exc
+
+    matrix = jacobian.tocsc(copy=True)
+    matrix.sum_duplicates()
+    matrix.sort_indices()
+    factorizer = solver._clu_factorizer
+    if factorizer is None:
+        factorizer = clu.Factorizer(matrix, clu.Options())
+        solver._clu_factorizer = factorizer
+
+    status = factorizer.factorize(matrix)
+    if status is clu.Status.INVALID_INPUT:
+        factorizer = clu.Factorizer(matrix, clu.Options())
+        solver._clu_factorizer = factorizer
+        status = factorizer.factorize()
+    if status is not clu.Status.SUCCESS:
+        solver._clu_factorizer = None
+        raise RuntimeError(f"CLU factorization failed: {clu.status_name(status)}")
+
+    right_hand_side = -np.asarray(residual, dtype=np.float64)
+    step = np.empty_like(right_hand_side)
+    status = factorizer.solve(right_hand_side, step)
+    if status is not clu.Status.SUCCESS:
+        solver._clu_factorizer = None
+        raise RuntimeError(f"CLU triangular solve failed: {clu.status_name(status)}")
+    return step
 
 
 def _sparse_ordering(sparsity: bool) -> str:

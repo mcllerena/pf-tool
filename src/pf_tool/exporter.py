@@ -221,8 +221,9 @@ SheetRows = tuple[Sequence[str], Iterable[Sequence[object]]]
 class ExportSolution:
     """Export the solved components of a power-flow solver to a workbook.
 
-    ``solver`` is a :class:`NewtonRaphsonPowerFlow` or
-    :class:`OptimizationPowerFlow` on which ``solve()`` has been called.
+    ``solver`` is a solved power-flow solver, such as
+    :class:`NewtonRaphsonPowerFlow`, :class:`LevenbergMarquardtPowerFlow`,
+    :class:`OptimizationPowerFlow`, or :class:`ACOptimalPowerFlow`.
     """
 
     def __init__(
@@ -459,6 +460,8 @@ class _SolutionTables:
         method = type(solver).__name__
         if method == "NewtonRaphsonPowerFlow":
             method = "Newton-Raphson"
+        elif method == "LevenbergMarquardtPowerFlow":
+            method = "Levenberg-Marquardt"
         elif method == "FastDecoupledPowerFlow":
             variant = (
                 "constant B'/B''" if getattr(solver, "enhancement", False) else "Jacobian blocks"
@@ -468,6 +471,8 @@ class _SolutionTables:
         elif method == "OptimizationPowerFlow":
             start = "warm start" if getattr(solver, "warm_start", False) else "cold start"
             method = f"Optimization (Pyomo/Ipopt, {start})"
+        elif method == "ACOptimalPowerFlow":
+            method = f"ACOPF (Ipopt, {solver.objective.replace('_', ' ')})"
         kinds = [_branch_kind(branch) for branch in self.case.branches]
         losses = sum(flow.from_power + flow.to_power for flow in self.flows)
         overloads = sum(
