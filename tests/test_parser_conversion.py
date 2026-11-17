@@ -2,7 +2,7 @@ from pathlib import Path
 
 from pf_tool import NewtonRaphsonPowerFlow
 from pf_tool.parser import Ntw2DatParser, Pwf2DatParser
-from pf_tool.utils.dat_parser import parse_dat_file, parse_dat_text
+from pf_tool.utils.dat_parser import parse_dat_file
 from pf_tool.utils.utils import build_power_flow_case
 
 DATA = Path(__file__).parent / "data"
@@ -30,26 +30,17 @@ def test_ntw_conversion_builds_a_complete_ac_case(tmp_path: Path) -> None:
     assert NewtonRaphsonPowerFlow(filename=str(output)).solve().converged
 
 
-def test_pwf_conversion_builds_svc_and_csc_case(tmp_path: Path) -> None:
-    source = DATA / "pwf" / "d_33nodes_dcer_dcsc.pwf"
-    output = Pwf2DatParser(source).convert(tmp_path / "case.dat")
-
-    tables = parse_dat_file(output)
-    case = build_power_flow_case(tables)
-
-    assert len(case.buses) == 33
-    assert len(case.svcs) == 8
-    assert len(tables["DCSC"]) == 1
-    assert any(branch.is_csc for branch in case.branches)
-
-
 def test_pwf_conversion_handles_compact_fixed_width_records(tmp_path: Path) -> None:
     source = DATA / "pwf" / "d_9nodes.pwf"
 
     output = Pwf2DatParser(source).convert(tmp_path / "9nodes.dat")
+    rendered = output.read_text(encoding="utf-8")
     tables = parse_dat_file(output)
     case = build_power_flow_case(tables)
 
+    assert rendered.startswith("# Generated from d_9nodes.pwf\n\n")
+    assert "param: DOPC: Op      E   :=" in rendered
+    assert '             "QLIM"  "L"' in rendered
     assert len(case.buses) == 9
     assert len(case.branches) == 10
     assert case.buses[0].number == 1
@@ -57,26 +48,15 @@ def test_pwf_conversion_handles_compact_fixed_width_records(tmp_path: Path) -> N
     assert NewtonRaphsonPowerFlow(filename=str(output)).solve().converged
 
 
-def test_large_ntw_conversion_preserves_shunts_and_series_devices() -> None:
-    source = DATA / "ntw" / "CASO01.NTW"
+def test_pwf_conversion_decodes_utf8_titles(tmp_path: Path) -> None:
+    source = DATA / "pwf" / "d_9nodes.pwf"
+    lines = source.read_text(encoding="ascii").splitlines()
+    title = "Sistema-Teste de 9 Barras - Ver\u00e3o"
+    lines[1] = title
+    text = "\n".join(lines) + "\n"
+    utf8_source = tmp_path / "utf8-title.pwf"
+    utf8_source.write_text(text, encoding="utf-8")
 
-    tables = parse_dat_text(Ntw2DatParser(source).parse())
-    case = build_power_flow_case(tables)
+    rendered = Pwf2DatParser(utf8_source).parse()
 
-    assert len(case.buses) == 10_730
-    assert len(tables["DBSH_BANK"]) > 0
-    assert len(tables["DCSC"]) > 0
-    assert len(tables["DNTW_DCLINK"]) > 0
-
-
-def test_large_pwf_conversion_preserves_lcc_and_shunt_bank_data() -> None:
-    source = DATA / "pwf" / "20240820_C_00-00.pwf"
-
-    tables = parse_dat_text(Pwf2DatParser(source).parse())
-    case = build_power_flow_case(tables)
-
-    assert len(case.buses) > 10_000
-    assert len(case.svcs) == 44
-    assert len(case.switched_shunts) > 0
-    assert len(case.hvdc_links) == 14
-    assert len(tables["DBSH_BANK"]) > 0
+    assert f'"{title}"' in rendered

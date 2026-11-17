@@ -37,9 +37,13 @@ def solved(request: pytest.FixtureRequest) -> tuple[NewtonRaphsonPowerFlow, str]
 def test_package_exports_and_version() -> None:
     assert pf_tool.__version__
     assert set(pf_tool.__all__) >= {
+        "ACOPFViolation",
+        "ACOptimalPowerFlow",
+        "ACOptimalPowerFlowResult",
         "ExportSolution",
         "DCPowerFlow",
         "FastDecoupledPowerFlow",
+        "LevenbergMarquardtPowerFlow",
         "NewtonRaphsonPowerFlow",
         "OptimizationPowerFlow",
         "PowerFlowResult",

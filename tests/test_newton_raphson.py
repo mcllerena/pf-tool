@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import unittest
+from pathlib import Path
 
 import numpy as np
 from scipy.sparse import csc_matrix
@@ -10,7 +11,7 @@ from pf_tool.models.bus import Bus, BusType
 from pf_tool.models.case import PowerFlowCase
 from pf_tool.models.hvdc_lcc import build_lcc_links, update_lcc_from_dc_solution
 from pf_tool.models.svc import SVC, SVCState, refresh_svc_limits
-from pf_tool.newton_raphson import NewtonRaphsonPowerFlow, _sparse_solve
+from pf_tool.newton_raphson import NewtonRaphsonPowerFlow, _clu_sparse_solve, _sparse_solve
 from pf_tool.utils.dat_parser import parse_dat_text
 
 
@@ -50,8 +51,54 @@ class SparseLUTests(unittest.TestCase):
             with self.subTest(sparsity=sparsity), self.assertRaisesRegex(RuntimeError, "singular"):
                 _sparse_solve(matrix, np.ones(2), lu_decomposition=True, sparsity=sparsity)
 
+    def test_clu_factorizer_reuses_and_reanalyzes_sparse_patterns(self) -> None:
+        try:
+            from VeraGridEngine.Utils.Sparse import clu  # noqa: F401
+        except ImportError:
+            self.skipTest("VeraGridEngine is not installed")
+
+        solver = object.__new__(NewtonRaphsonPowerFlow)
+        solver._clu_factorizer = None
+        matrices = (
+            csc_matrix([[4.0, -1.0], [-1.0, 3.0]]),
+            csc_matrix([[5.0, -1.0], [-1.0, 4.0]]),
+            csc_matrix([[2.0, 0.0], [0.0, 6.0]]),
+        )
+        residual = np.array([3.0, -5.0])
+
+        for index, matrix in enumerate(matrices):
+            step = _clu_sparse_solve(matrix, residual, solver)
+            self.assertTrue(np.allclose(matrix @ step, -residual))
+            if index == 0:
+                initial_factorizer = solver._clu_factorizer
+            elif index == 1:
+                self.assertIs(solver._clu_factorizer, initial_factorizer)
+            else:
+                self.assertIsNot(solver._clu_factorizer, initial_factorizer)
+
 
 class NewtonRaphsonTests(unittest.TestCase):
+    def test_clu_linear_solver_converges_on_ieee9(self) -> None:
+        try:
+            from VeraGridEngine.Utils.Sparse import clu  # noqa: F401
+        except ImportError:
+            self.skipTest("VeraGridEngine is not installed")
+
+        filename = Path(__file__).parent / "data" / "IEEE9-FLOW.dat"
+        result = NewtonRaphsonPowerFlow(
+            filename, control_method="sequential", linear_solver="clu"
+        ).solve()
+
+        self.assertTrue(result.converged, result.failure_reason)
+        self.assertLessEqual(result.max_mismatch, 1e-4)
+
+    def test_rejects_clu_with_scipy_only_options(self) -> None:
+        with self.assertRaisesRegex(ValueError, "SciPy-only"):
+            NewtonRaphsonPowerFlow("unused.dat", linear_solver="clu", sparsity=True)
+
+        with self.assertRaisesRegex(ValueError, "linear_solver"):
+            NewtonRaphsonPowerFlow("unused.dat", linear_solver="unknown")
+
     def test_solves_a_two_bus_load_case(self) -> None:
         case = PowerFlowCase(
             base_mva=100.0,

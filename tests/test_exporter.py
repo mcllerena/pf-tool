@@ -7,6 +7,7 @@ from pathlib import Path
 from openpyxl import load_workbook
 
 from pf_tool.exporter import SHEET_HEADERS, ExportSolution
+from pf_tool.levenberg_marquardt import LevenbergMarquardtPowerFlow
 from pf_tool.models.branch import Branch
 from pf_tool.models.bus import Bus, BusType
 from pf_tool.models.case import PowerFlowCase
@@ -14,6 +15,14 @@ from pf_tool.newton_raphson import NewtonRaphsonPowerFlow
 
 
 class ExportSolutionTests(unittest.TestCase):
+    def test_summary_labels_levenberg_marquardt(self) -> None:
+        filename = Path(__file__).parent / "data" / "IEEE9-FLOW.dat"
+        solver = LevenbergMarquardtPowerFlow(filename)
+        self.assertTrue(solver.solve().converged)
+
+        export = ExportSolution(solver, output_path=Path("unused.xlsx"), export=False)
+        self.assertIn(("Method", "Levenberg-Marquardt"), export.sheets["Summary"][1])
+
     def test_exports_every_sheet_and_recovers_switch_flow(self) -> None:
         # Bus 3 hangs on bus 2 through a switch that the reduction contracts,
         # so the switch flow must come from the KCL recovery: the bus 3 load.

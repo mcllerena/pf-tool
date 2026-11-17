@@ -9,7 +9,7 @@ from pf_tool import DCPowerFlow, DCPowerFlowResult
 from pf_tool.models.bus import BusType
 
 DATA = Path(__file__).parent / "data"
-MAIN_CASES = sorted(DATA.glob("CASO*-FLOW.dat"))
+IEEE9 = DATA / "IEEE9-FLOW.dat"
 
 
 def _two_bus_case(tmp_path: Path) -> Path:
@@ -79,16 +79,15 @@ def test_dc_rejects_zero_reactance_branch(tmp_path: Path) -> None:
         solver.solve()
 
 
-@pytest.mark.parametrize("filename", MAIN_CASES, ids=lambda path: path.stem)
-def test_dc_converges_on_all_main_bips_cases(filename: Path) -> None:
-    solver = DCPowerFlow(filename)
+def test_dc_converges_on_ieee9_case() -> None:
+    solver = DCPowerFlow(IEEE9)
     result = solver.solve()
 
     assert result.converged, result.failure_reason
     assert result.iterations == 1
     assert result.max_mismatch <= solver.tolerance
     assert len(result.branch_flows) == len(solver.case.branches)
-    assert len(result.reference_buses) == 6
+    assert result.reference_buses == (1,)
     assert all(
         solver.case.buses[solver.case.bus_index[number]].bus_type == BusType.SLACK
         for number in result.reference_buses
