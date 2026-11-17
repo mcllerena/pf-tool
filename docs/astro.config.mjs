@@ -56,6 +56,7 @@ export default defineConfig({
 					items: [
 						{ label: "Newton-Raphson", slug: "methods/newton-raphson" },
 						{ label: "Fast decoupled", slug: "methods/fast-decoupled" },
+						{ label: "DC power flow", slug: "methods/dc-power-flow" },
 						{ label: "Optimization power flow", slug: "methods/optimization" },
 						{ label: "Results and benchmarks", slug: "methods/results" },
 					],

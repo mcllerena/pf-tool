@@ -61,12 +61,13 @@ All 11 cases in `tests/data/` converge with every method. For each run, the maxi
 
 ## Package layout
 
-Install with `pip install pf-tool`, then import from `pf_tool`. The main classes are also exported at the top level: `from pf_tool import NewtonRaphsonPowerFlow, FastDecoupledPowerFlow, OptimizationPowerFlow, ExportSolution`.
+Install with `pip install pf-tool`, then import from `pf_tool`. The main classes are also exported at the top level: `from pf_tool import NewtonRaphsonPowerFlow, FastDecoupledPowerFlow, DCPowerFlow, OptimizationPowerFlow, ExportSolution`.
 
 | Path                        | Contents                                                                                                                              |
 | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | `pf_tool/newton_raphson.py` | `NewtonRaphsonPowerFlow` and the shared `PowerFlowResult` / `BusSolution` results                                                     |
 | `pf_tool/fast_decoupled.py` | `FastDecoupledPowerFlow`: decoupled Newton and constant B'/B'' fast decoupled power flow                                              |
+| `pf_tool/dc_power_flow.py`  | `DCPowerFlow`: sparse B-prime solve for bus angles and active branch flows                                                            |
 | `pf_tool/optimization.py`   | `OptimizationPowerFlow`, the Pyomo model builder, and the SVC region logic                                                            |
 | `pf_tool/exporter.py`       | `ExportSolution`: Excel workbook with one sheet per component                                                                         |
 | `pf_tool/models/`           | One module per component: `bus`, `branch`, `transformer`, `csc`, `shunt`, `svc`, `hvdc_lcc`, `generator`, `case`, `network_reduction` |

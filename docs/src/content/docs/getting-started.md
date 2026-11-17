@@ -57,6 +57,27 @@ With the default simultaneous method, pass 1 solves switched shunts as continuou
 | `Max dV` / `Max dAng` | Largest voltage-magnitude / angle change made by the step that produced the row           |
 | `Step`                | Line-search step length; 1 is a full Newton step, smaller values mean the step was damped |
 
+## DC power flow
+
+The DC solver computes bus angles and active branch flows with one sparse
+linear solve. Its result includes the solved `angles_radians`,
+`reference_buses`, and oriented `branch_flows`:
+
+```python
+from pf_tool import DCPowerFlow
+
+result = DCPowerFlow(
+    "tests/data/CASO01-FLOW.dat",
+    print_iterations=True,
+).solve()
+print(result.converged, result.max_mismatch)
+```
+
+The model assumes unit voltage magnitudes, zero series resistance, small angle
+differences, and omits reactive power and shunt effects. See the
+[DC power-flow method](/pf-tool/methods/dc-power-flow/) for the equations and
+reference-bus behavior.
+
 ```python
 from pf_tool import FastDecoupledPowerFlow
 
@@ -96,7 +117,9 @@ ExportSolution(solver, output_path="results/CASO01-FLOW-nr.xlsx")
 | Class                    | Argument             | Default                     | Meaning                                                                                                                 |
 | ------------------------ | -------------------- | --------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
 | all                      | `filename`           | required                    | Case to solve                                                                                                           |
-| all                      | `tolerance`          | `TEPA / BASE` from `DCTE`   | Maximum absolute P, Q, and control mismatch, in pu                                                                      |
+| all                      | `tolerance`          | `TEPA / BASE` from `DCTE`   | Maximum mismatch in pu; DC uses active-power mismatch at non-reference buses                                            |
+| `DCPowerFlow`            | `reference_bus`      | `None`                      | Optional bus number to use as the reference in its connected island                                                     |
+| `DCPowerFlow`            | `print_iterations`   | `False`                     | Print the direct-solve summary                                                                                          |
 | `NewtonRaphsonPowerFlow` | `max_iterations`     | `ACIT` from `DCTE`          | Newton iterations per inner solve                                                                                       |
 | `NewtonRaphsonPowerFlow` | `max_control_passes` | 50                          | Outer passes for discrete controls (sequential method)                                                                  |
 | `NewtonRaphsonPowerFlow` | `control_method`     | `"simultaneous"`            | Solve every control in the Newton system, or `"sequential"` to update generator limits, shunts, and LCCs between solves |
@@ -123,6 +146,10 @@ ExportSolution(solver, output_path="results/CASO01-FLOW-nr.xlsx")
 | `voltage`        | Complex bus voltages for the original, unreduced bus list                                                 |
 | `buses`          | `BusSolution` entries: number, name, $\lvert V\rvert$ (pu), angle (degrees), and P/Q injections (MW/Mvar) |
 | `failure_reason` | Text explanation when the run does not converge                                                           |
+
+`DCPowerFlowResult` extends this result with the unwrapped bus angles in
+`angles_radians`, reference bus numbers in `reference_buses`, and one
+`DCBranchFlow` record per branch in `branch_flows`.
 
 ## Building these docs
 

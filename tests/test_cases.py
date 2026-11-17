@@ -38,6 +38,7 @@ def test_package_exports_and_version() -> None:
     assert pf_tool.__version__
     assert set(pf_tool.__all__) >= {
         "ExportSolution",
+        "DCPowerFlow",
         "FastDecoupledPowerFlow",
         "NewtonRaphsonPowerFlow",
         "OptimizationPowerFlow",

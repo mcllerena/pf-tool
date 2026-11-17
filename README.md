@@ -55,7 +55,8 @@ nlp = OptimizationPowerFlow(
 ).solve()
 ```
 
-`NewtonRaphsonPowerFlow` and `FastDecoupledPowerFlow` do not need Ipopt.
+`DCPowerFlow`, `NewtonRaphsonPowerFlow`, and `FastDecoupledPowerFlow` do not
+need Ipopt.
 
 ### Parsing BIPS files (PWF and NTW)
 
@@ -161,6 +162,17 @@ by a coupling-corrected step on the full Jacobian. See the
 for the formulation, and
 [`examples/run_fd_powerflow.py`](https://github.com/mcllerena/pf-tool/blob/main/examples/run_fd_powerflow.py).
 
+### Solve a case with DC Power Flow
+
+`DCPowerFlow` applies the linear DC approximation and returns bus angles and
+active branch flows in one sparse solve:
+
+The model assumes unit voltage magnitudes, zero series resistance, small angle
+differences, and ignores reactive power and shunts. It uses a slack bus for
+each island; pass `reference_bus` to choose a different reference in one
+island. See the [DC power-flow guide](https://mcllerena.github.io/pf-tool/methods/dc-power-flow/)
+and [`examples/run_dc_powerflow.py`](https://github.com/mcllerena/pf-tool/blob/main/examples/run_dc_powerflow.py).
+
 The eleven sample cases are in
 [`tests/data/`](https://github.com/mcllerena/pf-tool/tree/main/tests/data), and
 runnable scripts are in
@@ -172,10 +184,16 @@ runnable scripts are in
 - [Solution pipeline](https://mcllerena.github.io/pf-tool/pipeline/): parsing, reduction, solve, and write-back.
 - [Data file](https://mcllerena.github.io/pf-tool/data/blocks/): every `.dat` block and column.
 - [Components](https://mcllerena.github.io/pf-tool/components/buses/): how each power-system component is modeled.
-- [Newton-Raphson](https://mcllerena.github.io/pf-tool/methods/newton-raphson/), [fast decoupled](https://mcllerena.github.io/pf-tool/methods/fast-decoupled/), and [optimization](https://mcllerena.github.io/pf-tool/methods/optimization/): full formulations.
 - [Results and benchmarks](https://mcllerena.github.io/pf-tool/methods/results/): convergence on all eleven cases.
 - [Exporting results](https://mcllerena.github.io/pf-tool/export/): the Excel workbook layout.
 - [Changelog](https://github.com/mcllerena/pf-tool/blob/main/CHANGELOG.md): release history.
+
+### Power-flow methods
+
+1. [Newton-Raphson](https://mcllerena.github.io/pf-tool/methods/newton-raphson/): nonlinear AC power flow with simultaneous or sequential controls.
+2. [Fast decoupled](https://mcllerena.github.io/pf-tool/methods/fast-decoupled/): decoupled AC power flow with Jacobian-block or constant-matrix options.
+3. [DC power flow](https://mcllerena.github.io/pf-tool/methods/dc-power-flow/): linear active-power flow using the B-prime matrix.
+4. [Optimization power flow](https://mcllerena.github.io/pf-tool/methods/optimization/): constrained nonlinear optimization solved with Ipopt.
 
 ## Development
 
