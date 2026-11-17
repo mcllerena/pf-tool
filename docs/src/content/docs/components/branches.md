@@ -3,7 +3,7 @@ title: Lines and transformers
 description: π-model branches with off-nominal taps and phase shifts, and how they form Ybus.
 ---
 
-Source: `pf_tool/models/branch.py`, `pf_tool/models/transformer.py` (`branch_from_dlin`), and `pf_tool/utils/network.py` (`build_ybus`).
+Source: `pf_tool/models/branch.py`, `pf_tool/models/transformer.py` (`branch_from_dlin`), and `pf_tool/utils/network.py` (matrix assembly, re-exported through `pf_tool/models/ybus.py`).
 
 ## Branch model
 
@@ -42,6 +42,15 @@ $$
 S_i^{calc} = V_i\,\big(\textstyle\sum_j Y_{ij} V_j\big)^* ,\qquad
 P_i^{calc} = \operatorname{Re} S_i^{calc},\; Q_i^{calc} = \operatorname{Im} S_i^{calc}.
 $$
+
+The matrix and calculated per-unit bus injections can be queried from a `PowerFlowCase`:
+
+```python
+from pf_tool.models.ybus import build_ybus, calculate_power
+
+ybus = build_ybus(case)
+injections_pu = calculate_power(ybus, case.initial_voltage)
+```
 
 For solving, the branch matrix is **frozen** as a base matrix. Shunt changes and tap or phase changes are added on top as stamp differences:
 

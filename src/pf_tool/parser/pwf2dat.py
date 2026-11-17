@@ -303,21 +303,30 @@ class Pwf2DatParser:
         self.mapping_path = Path(mapping_path)
         raw_mapping = json.loads(self.mapping_path.read_text(encoding="utf-8"))
         self.mapping = {key: value for key, value in raw_mapping.items() if not key.startswith("_")}
+        self._source_encoding = "utf-8"
 
     def parse(self) -> str:
         """Parse the source file and return its DAT representation."""
         source = self.filename.read_bytes()
         try:
-            text = source.decode("utf-8-sig")
+            source.decode("utf-8-sig")
+            self._source_encoding = "utf-8"
         except UnicodeDecodeError:
-            text = source.decode("cp1252", errors="replace")
+            self._source_encoding = "cp1252"
         tables: dict[str, list[dict[str, object]]] = defaultdict(list)
+        dbar_lines: list[bytes] = []
         active: str | None = None
         dbsh_parent: int | None = None
         dbsh_bank_section = False
         base_mva = 100.0
 
-        for line in text.splitlines():
+        for line_number, source_line in enumerate(source.splitlines()):
+            encoding = (
+                "utf-8-sig"
+                if line_number == 0 and self._source_encoding == "utf-8"
+                else self._source_encoding
+            )
+            line = source_line.decode(encoding, errors="replace")
             stripped = line.strip()
             if not stripped:
                 continue
@@ -360,7 +369,7 @@ class Pwf2DatParser:
                 continue
             if active == "DBSH" and dbsh_bank_section and dbsh_parent is not None:
                 bank_fields = self.mapping["DBSH"].get("bank_fields", {})
-                bank = self._parse_fixed(line, bank_fields)
+                bank = self._parse_fixed(source_line, bank_fields)
                 tables["DBSH_BANK"].append(
                     {
                         "Parent": dbsh_parent,
@@ -374,9 +383,9 @@ class Pwf2DatParser:
                 )
                 continue
 
-            values = self._parse_fixed(line, self.mapping[active].get("fields", {}))
+            values = self._parse_fixed(source_line, self.mapping[active].get("fields", {}))
             if active == "DBAR":
-                values = self._repair_dbar(line, values)
+                dbar_lines.append(source_line)
             if active == "DGEI":
                 record = self._alias_record(active, values)
                 tables[active].append(record)
@@ -401,6 +410,18 @@ class Pwf2DatParser:
             tables[active].append(record)
             if active == "DBSH":
                 dbsh_parent = len(tables["DBSH"])
+
+        voltage_groups = {
+            str(record.get("G", "")).strip().upper()
+            for record in tables.get("DGLT", [])
+            if str(record.get("G", "")).strip()
+        }
+        for line, record in zip(dbar_lines, tables["DBAR"], strict=True):
+            values = self._parse_fixed(line, self.mapping["DBAR"]["fields"])
+            repaired = self._repair_dbar(line, values, voltage_groups)
+            record["Gl"] = repaired["voltage_limit_group"]
+            record["V"] = repaired["voltage"]
+            record["A0"] = repaired["angle"]
 
         if not any(record["Mn"].upper() == "BASE" for record in tables["DCTE"]):
             tables["DCTE"].insert(0, {"Mn": "BASE", "Val": base_mva})
@@ -427,13 +448,18 @@ class Pwf2DatParser:
             return tokens[0]
         return None
 
-    def _parse_fixed(self, line: str, fields: dict[str, Any]) -> dict[str, object]:
+    def _parse_fixed(self, line: str | bytes, fields: dict[str, Any]) -> dict[str, object]:
         values: dict[str, object] = {}
         for name, spec in fields.items():
             column = spec.get("column", {})
             start = max(0, int(column.get("start", 1)) - 1)
             end = int(column.get("end", start + 1))
-            raw = line[start:end].strip()
+            raw_value = line[start:end]
+            raw = (
+                raw_value.decode(self._source_encoding, errors="replace").strip()
+                if isinstance(raw_value, bytes)
+                else raw_value.strip()
+            )
             if not raw:
                 value = spec.get("default", "")
             elif _NUMBER.fullmatch(raw):
@@ -500,16 +526,46 @@ class Pwf2DatParser:
         return value is not None and _NUMBER.fullmatch(str(value)) is not None
 
     @staticmethod
-    def _repair_dbar(line: str, values: dict[str, object]) -> dict[str, object]:
-        voltage = values.get("voltage")
-        if not isinstance(voltage, str):
+    def _repair_dbar(
+        line: str | bytes,
+        values: dict[str, object],
+        voltage_groups: set[str],
+    ) -> dict[str, object]:
+        if isinstance(line, bytes):
+            line = line.decode("latin-1")
+        group = str(values.get("voltage_limit_group", "")).strip().upper()
+        if group in voltage_groups:
             return values
+
         match = _PACKED_DBAR.fullmatch(line[22:30].strip())
-        if match is None:
+        if match is not None:
+            voltage = int(match.group(1)) / 1000
+            angle = float(match.group(2))
+        else:
+            current_voltage = values.get("voltage")
+            try:
+                parsed_voltage = float(str(current_voltage).replace("D", "E").replace("d", "e"))
+            except ValueError:
+                parsed_voltage = float("nan")
+            if 0.4 <= parsed_voltage <= 2.0:
+                return values
+
+            raw_voltage = line[22:26].strip()
+            raw_angle = line[26:30].strip()
+            if not _NUMBER.fullmatch(raw_voltage) or not _NUMBER.fullmatch(raw_angle):
+                return values
+            voltage = float(raw_voltage.replace("D", "E").replace("d", "e"))
+            if "." not in raw_voltage and "e" not in raw_voltage.lower():
+                voltage /= 1000
+            angle = float(raw_angle.replace("D", "E").replace("d", "e"))
+
+        if not 0.4 <= voltage <= 2.0 or abs(angle) > 360:
             return values
+
         repaired = dict(values)
-        repaired["voltage"] = int(match.group(1)) / 1000
-        repaired["angle"] = float(match.group(2))
+        repaired["voltage_limit_group"] = ""
+        repaired["voltage"] = voltage
+        repaired["angle"] = angle
         return repaired
 
     @staticmethod
