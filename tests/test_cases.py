@@ -63,6 +63,15 @@ def test_newton_solves_the_ieee9_case(solved: tuple[NewtonRaphsonPowerFlow, str]
     assert 0.0 <= losses < 5.0
 
 
+def test_newton_lu_option_solves_the_ieee9_case() -> None:
+    solver = NewtonRaphsonPowerFlow(filename=CASE, lu_decomposition=True)
+
+    result = solver.solve()
+
+    assert result.converged, result.failure_reason
+    assert result.max_mismatch <= solver.tolerance
+
+
 def test_both_control_methods_agree() -> None:
     voltages = [
         NewtonRaphsonPowerFlow(filename=CASE, control_method=method).solve().voltage

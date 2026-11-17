@@ -82,7 +82,16 @@ $$
   - LTC: $\kappa_c$ in the $|V_c|$ column, with a zero diagonal;
   - phase shifter: derivatives of $\operatorname{Re}S_{\text{Ext}}$ with respect to the terminal angles and magnitudes, with diagonal $\operatorname{Re}\,\partial S_{\text{Ext}}/\partial\varphi$.
 
-The analytic Jacobian was checked against central finite differences; the maximum error is $4\times10^{-8}$. The linear system $J\,\Delta x = -F$ is solved with SciPy's sparse LU (`spsolve`).
+The analytic Jacobian was checked against central finite differences; the maximum error is $4\times10^{-8}$. Each Newton step solves $J\,\Delta x=-F$ with a sparse direct solver. By default, the existing SciPy `spsolve` path is used. To select an explicit sparse LU factorization instead, set `lu_decomposition=True`:
+
+```python
+solver = NewtonRaphsonPowerFlow("CASE-FLOW.dat", lu_decomposition=True)
+result = solver.solve()
+```
+
+With this option enabled, SciPy's `splu` factorization performs the forward/backward substitutions without forming $J^{-1}$. Because the Jacobian changes at each operating point, Newton refactors it for each step. This changes only the linear-system backend, not the Newton-Raphson equations, controls, or iteration strategy.
+
+The optional LU path follows the workflow in the supplied notes: factor a sparse system into lower and upper triangular factors, then solve by substitution. The implementation delegates factorization to SuperLU rather than coding a dense Crout or Doolittle algorithm. `DCPowerFlow` factors its reduced B-prime matrix once per solve, while the enhanced fast-decoupled method reuses its constant B-prime/B-double-prime factors until the network structure changes.
 
 ## Step control
 

@@ -181,6 +181,10 @@ class NewtonRaphsonPowerFlow:
     * ``"sequential"``: those controls are updated between full Newton solves
       (one shunt unit per pass, PV to PQ switching, LCC recomputed from the
       AC voltages) until no control changes.
+
+    Set ``lu_decomposition=True`` to select an explicit sparse LU
+    factorization for the Newton linear systems. The default retains the
+    existing SciPy sparse direct-solve path.
     """
 
     max_control_passes = 50
@@ -190,6 +194,7 @@ class NewtonRaphsonPowerFlow:
     filename: Path | None = None
     print_iterations = False
     control_method = "simultaneous"
+    lu_decomposition = False
     solver_name = "Newton-Raphson power flow"
     method_label = "Newton-Raphson"
 
@@ -202,10 +207,12 @@ class NewtonRaphsonPowerFlow:
         max_control_passes: int = 50,
         control_method: str = "simultaneous",
         print_iterations: bool = False,
+        lu_decomposition: bool = False,
     ) -> None:
         if control_method not in _CONTROL_METHODS:
             raise ValueError(f"control_method must be one of {', '.join(_CONTROL_METHODS)}")
         self.control_method = control_method
+        self.lu_decomposition = lu_decomposition
         self.filename = Path(filename)
         self.print_iterations = bool(print_iterations)
         tables = parse_dat_file(self.filename)
@@ -438,7 +445,7 @@ class NewtonRaphsonPowerFlow:
 
             jacobian = self._build_jacobian(ybus, voltage, svc_states, layout)
             try:
-                step = _sparse_solve(jacobian, residual)
+                step = _sparse_solve(jacobian, residual, self.lu_decomposition)
                 # Drop controls whose regulation equation is (nearly) singular:
                 # a tap/phase step far beyond any physical range shows that the
                 # control has no independent effect on its target.
@@ -451,7 +458,7 @@ class NewtonRaphsonPowerFlow:
                     layout = self._layout(svc_states, controls)
                     residual = self._residual(ybus, voltage, specified, svc_states, layout)
                     jacobian = self._build_jacobian(ybus, voltage, svc_states, layout)
-                    step = _sparse_solve(jacobian, residual)
+                    step = _sparse_solve(jacobian, residual, self.lu_decomposition)
             except (MatrixRankWarning, FloatingPointError, RuntimeError, ValueError) as exc:
                 return voltage, ybus, iteration, mismatch, f"Sparse Newton solve failed: {exc}"
             if not np.all(np.isfinite(step)):
@@ -1186,7 +1193,7 @@ class NewtonRaphsonPowerFlow:
 
             try:
                 residual, jacobian = evaluate(layout)
-                step = _sparse_solve(jacobian, residual)
+                step = _sparse_solve(jacobian, residual, self.lu_decomposition)
                 # Phase shifters keep their singularity screening; LTC laws
                 # are regularized by their dead-band slope instead.
                 for _ in range(5):
@@ -1202,7 +1209,7 @@ class NewtonRaphsonPowerFlow:
                     controls = [control for control in controls if not control.conflicting]
                     layout = self._layout(svc_states, controls)
                     residual, jacobian = evaluate(layout)
-                    step = _sparse_solve(jacobian, residual)
+                    step = _sparse_solve(jacobian, residual, self.lu_decomposition)
             except (MatrixRankWarning, FloatingPointError, RuntimeError, ValueError) as exc:
                 return (
                     voltage,
@@ -1520,9 +1527,7 @@ class NewtonRaphsonPowerFlow:
                     break
                 jacobian = _network_jacobian(ybus, candidate, angle_buses, empty)
                 try:
-                    with warnings.catch_warnings():
-                        warnings.simplefilter("error", MatrixRankWarning)
-                        step = np.asarray(spsolve(jacobian, -mismatch), dtype=float)
+                    step = _sparse_solve(jacobian, mismatch, self.lu_decomposition)
                 except (MatrixRankWarning, FloatingPointError, RuntimeError, ValueError):
                     break
                 if not np.all(np.isfinite(step)):
@@ -1610,7 +1615,13 @@ def _network_jacobian(
     )
 
 
-def _sparse_solve(jacobian: csc_matrix, residual: np.ndarray) -> np.ndarray:
+def _sparse_solve(
+    jacobian: csc_matrix, residual: np.ndarray, lu_decomposition: bool = False
+) -> np.ndarray:
+    """Solve ``J x = -residual`` with the selected sparse direct solver."""
+    if lu_decomposition:
+        factor = splu(jacobian.tocsc())
+        return np.asarray(factor.solve(-residual), dtype=float)
     with warnings.catch_warnings():
         warnings.simplefilter("error", MatrixRankWarning)
         return np.asarray(spsolve(jacobian, -residual), dtype=float)

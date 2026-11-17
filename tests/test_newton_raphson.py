@@ -3,13 +3,14 @@ from __future__ import annotations
 import unittest
 
 import numpy as np
+from scipy.sparse import csc_matrix
 
 from pf_tool.models.branch import Branch
 from pf_tool.models.bus import Bus, BusType
 from pf_tool.models.case import PowerFlowCase
 from pf_tool.models.hvdc_lcc import build_lcc_links, update_lcc_from_dc_solution
 from pf_tool.models.svc import SVC, SVCState, refresh_svc_limits
-from pf_tool.newton_raphson import NewtonRaphsonPowerFlow
+from pf_tool.newton_raphson import NewtonRaphsonPowerFlow, _sparse_solve
 from pf_tool.utils.dat_parser import parse_dat_text
 
 
@@ -29,6 +30,23 @@ param: DCTE: Mn Val :=
         parsed = parse_dat_text(text)
         self.assertEqual(parsed["DBAR"][0]["Name"], "BUS WITH SPACES")
         self.assertEqual([row["Mn"] for row in parsed["DCTE"]], ["BASE", "TEPA"])
+
+
+class SparseLUTests(unittest.TestCase):
+    def test_sparse_direct_solvers_solve_without_matrix_inversion(self) -> None:
+        matrix = csc_matrix([[4.0, -1.0], [-1.0, 3.0]])
+        residual = np.array([3.0, -5.0])
+
+        for lu_decomposition in (False, True):
+            with self.subTest(lu_decomposition=lu_decomposition):
+                step = _sparse_solve(matrix, residual, lu_decomposition)
+                self.assertTrue(np.allclose(matrix @ step, -residual))
+
+    def test_sparse_lu_surfaces_singular_systems(self) -> None:
+        matrix = csc_matrix([[1.0, 2.0], [2.0, 4.0]])
+
+        with self.assertRaisesRegex(RuntimeError, "singular"):
+            _sparse_solve(matrix, np.ones(2), lu_decomposition=True)
 
 
 class NewtonRaphsonTests(unittest.TestCase):
